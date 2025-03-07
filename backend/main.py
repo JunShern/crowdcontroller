@@ -5,11 +5,6 @@ from collections import defaultdict
 
 app = FastAPI()
 
-# Health check endpoint
-@app.get("/health")
-async def health_check():
-    return {"status": "healthy"}
-
 # Serve frontend
 app.mount("/", StaticFiles(directory="static", html=True), name="frontend")
 
