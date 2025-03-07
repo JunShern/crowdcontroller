@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>WebSocket Test</title>
+</head>
+<body>
+    <h2>Press a Button to Send a Command</h2>
+    <button onclick="sendCommand('A')">Command A</button>
+    <button onclick="sendCommand('B')">Command B</button>
+    <button onclick="sendCommand('C')">Command C</button>
+    <h3>Live Aggregation:</h3>
+    <pre id="output">Waiting...</pre>
+
+    <script>
+        let ws = new WebSocket("wss://yourapp.up.railway.app/ws"); // Replace with your Railway URL
+
+        ws.onmessage = function(event) {
+            document.getElementById("output").innerText = event.data;
+        };
+
+        function sendCommand(cmd) {
+            ws.send(cmd);
+        }
+    </script>
+</body>
+</html>
