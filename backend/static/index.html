@@ -13,7 +13,7 @@
     <pre id="output">Waiting...</pre>
 
     <script>
-        let ws = new WebSocket("wss://yourapp.up.railway.app/ws"); // Replace with your Railway URL
+        let ws = new WebSocket("wss://uvicorn-backendmain-production.up.railway.app/ws");
 
         ws.onmessage = function(event) {
             document.getElementById("output").innerText = event.data;
