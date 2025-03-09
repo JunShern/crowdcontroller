@@ -4,22 +4,20 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Crowd Controller</title>
+    <!-- Include NES.css and required Press Start 2P font -->
+    <link href="https://fonts.googleapis.com/css?family=Press+Start+2P" rel="stylesheet">
+    <link href="https://unpkg.com/nes.css@latest/css/nes.min.css" rel="stylesheet" />
     <style>
         :root {
-            --primary: #8250e6;           /* More vibrant purple */
-            --primary-light: #b57bff;     /* Lighter purple */
-            --primary-dark: #5c35a4;      /* Darker purple */
-            --accent: #ff3e3e;            /* Vibrant red */
-            --accent2: #00e1ff;           /* Cyan for cursor pad */
-            --dark: #0a0a23;              /* Darker blue-black background */
-            --light: #f0f0ff;             /* Slightly blue-tinted white */
-            --text: #ffffff;              /* White text */
-            --text-secondary: rgba(255, 255, 255, 0.8);
-            --button-size: min(85px, 22vw); /* Slightly larger buttons */
-            --button-radius: 12px;        /* Slightly rounder buttons */
-            --neon-glow: 0 0 15px rgba(255, 255, 255, 0.6), 0 0 30px rgba(120, 0, 255, 0.4);
-            --cyan-glow: 0 0 15px rgba(0, 225, 255, 0.6), 0 0 30px rgba(0, 170, 255, 0.4);
-            --red-glow: 0 0 15px rgba(255, 62, 62, 0.6), 0 0 30px rgba(255, 0, 0, 0.4);
+            /* High-contrast monochrome palette */
+            --primary: #92cc41;        /* Keep green for connection indicator */
+            --accent: #000000;         /* Black */
+            --background: #ffffff;     /* White */
+            --text: #000000;           /* Black text */
+            --text-secondary: rgba(0, 0, 0, 0.7);
+            --button-size: 75px;       /* Increased button size from 65px to 75px */
+            --center-size: 60px;       /* Increased size of center element */
+            --grid-gap: 6px;           /* Reduced gap between grid items */
         }
 
         * {
@@ -28,30 +26,29 @@
             box-sizing: border-box;
             -webkit-tap-highlight-color: transparent;
             user-select: none;
+            image-rendering: pixelated;
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-            background-color: var(--dark);
-            background-image: 
-                radial-gradient(circle at 10% 20%, rgba(120, 0, 255, 0.15) 0%, transparent 50%),
-                radial-gradient(circle at 90% 80%, rgba(0, 225, 255, 0.15) 0%, transparent 50%);
+            font-family: 'Press Start 2P', cursive;
+            background-color: var(--background);
             color: var(--text);
             height: 100vh;
             width: 100vw;
             overflow: hidden;
             display: flex;
             flex-direction: column;
-            justify-content: center;
             padding: 5px;
+            padding-top: 0; /* Reset any top padding */
+            image-rendering: pixelated;
         }
 
         .connection-status {
             position: absolute;
             top: 5px;
             right: 10px;
-            font-size: 0.8rem;
-            color: var(--text-secondary);
+            font-size: 0.7rem;
+            color: var(--text);
             display: flex;
             align-items: center;
             z-index: 100;
@@ -61,28 +58,41 @@
             display: inline-block;
             width: 10px;
             height: 10px;
-            border-radius: 50%;
-            background-color: red;
+            border-radius: 0;
+            background-color: #000000;
             margin-right: 5px;
-            box-shadow: 0 0 5px red;
         }
 
         #connection-dot.connected {
-            background-color: #4caf50;
-            box-shadow: 0 0 5px #4caf50;
+            background-color: var(--primary);
+        }
+
+        /* Fullscreen Button */
+        .fullscreen-btn {
+            position: absolute;
+            top: 5px;
+            left: 10px;
+            font-size: 0.7rem;
+            z-index: 100;
+            padding: 4px 8px !important;
+            min-height: unset !important;
+            height: auto !important;
         }
 
         .controller-container {
             display: flex;
             flex: 1;
-            gap: 40px; /* Increased gap between pads */
+            gap: 30px; /* Reduced gap on smaller screens */
             overflow: hidden;
-            justify-content: space-between; /* Back to space-between for side alignment */
+            justify-content: space-between;
             align-items: center;
-            padding: 0 8%; /* Balanced padding to keep elements on screen */
+            padding: 0 4%; /* Reduced side padding */
             max-width: 1200px;
             margin: 0 auto;
             width: 100%;
+            /* Add position relative to help with sizing calculations */
+            position: relative;
+            height: 100%;
         }
 
         .pad-wrapper {
@@ -90,203 +100,184 @@
             display: flex;
             flex-direction: column;
             align-items: center;
+            gap: 15px; /* Reduced gap between children of pad-wrapper */
         }
 
         .pad-container {
             display: flex;
             flex-direction: column;
-            justify-content: center;
             align-items: center;
             position: relative;
         }
 
         .pad-title {
-            color: var(--text-secondary);
+            color: var(--text);
             font-size: 0.9rem;
-            margin-top: 8px; /* Changed from margin-bottom to margin-top */
-            font-weight: bold;
             letter-spacing: 1px;
             text-align: center;
             text-transform: uppercase;
-            text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+            margin-top: 5px;
         }
 
-        .pad-icon {
-            font-size: 1.2rem;
+        .icon-container {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
             margin-left: 5px;
             vertical-align: middle;
         }
 
-        .cursor-icon {
-            display: inline-block;
-            transform: rotate(-45deg);
-            font-size: 1.3rem;
-            margin-left: 5px;
-            vertical-align: middle;
-            filter: drop-shadow(0 0 3px rgba(0, 225, 255, 0.6));
+        .nes-icon {
+            transform: scale(0.6);
         }
-
-        .d-pad, .cursor-pad {
+        
+        .nes-ash {
+            transform: scale(0.2);
             position: relative;
-            width: min(210px, 48vw); /* Slightly larger pads */
-            height: min(210px, 48vw);
-            border-radius: 50%;
         }
 
-        .d-pad {
-            background: rgba(80, 0, 180, 0.15);
-            box-shadow: inset 0 0 20px rgba(130, 80, 230, 0.3);
+        /* Cross-shaped pads with grid layout */
+        .d-pad, .cursor-pad {
+            display: grid;
+            grid-template-columns: var(--button-size) var(--button-size) var(--button-size);
+            grid-template-rows: var(--button-size) var(--button-size) var(--button-size);
+            grid-gap: var(--grid-gap);
+            width: calc(3 * var(--button-size) + 2 * var(--grid-gap));
+            height: calc(3 * var(--button-size) + 2 * var(--grid-gap));
         }
 
-        .cursor-pad {
-            background: rgba(0, 180, 180, 0.15);
-            box-shadow: inset 0 0 20px rgba(0, 225, 255, 0.3);
-        }
-
+        /* Position buttons in the grid */
         .control-button {
-            position: absolute;
-            width: var(--button-size);
-            height: var(--button-size);
-            border-radius: var(--button-radius);
+            position: relative;
+            width: 100%;
+            height: 100%;
             display: flex;
             justify-content: center;
             align-items: center;
             font-weight: bold;
-            color: var(--text);
             touch-action: manipulation;
-            border: none;
-            outline: none;
-            transition: all 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            font-size: 1.4rem; /* Slightly larger font */
+            font-size: 0.9rem;
             cursor: pointer;
+            transition: transform 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
 
-        .d-pad .control-button {
-            background: linear-gradient(to bottom, var(--primary-light), var(--primary));
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3), var(--neon-glow);
-            border: 2px solid var(--primary-light);
-        }
-
-        .cursor-pad .control-button {
-            background: linear-gradient(to bottom, #40e0ff, #00b3d9);
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3), var(--cyan-glow);
-            border: 2px solid #40e0ff;
-        }
-
-        .control-button.active {
-            transform: scale(0.9);
-            filter: brightness(1.5);
-        }
-
-        .d-pad .control-button.active {
-            box-shadow: 0 0 5px rgba(0, 0, 0, 0.2), 0 0 25px var(--primary-light);
-        }
-
-        .cursor-pad .control-button.active {
-            box-shadow: 0 0 5px rgba(0, 0, 0, 0.2), 0 0 25px #40e0ff;
-        }
-
-        /* Remote active state (when other users press buttons) */
-        .control-button.remote-active {
-            filter: brightness(1.1);
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3), 0 0 8px rgba(255, 255, 255, 0.4);
-        }
-
-        .click-button.remote-active {
-            filter: brightness(1.1);
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3), 0 0 8px rgba(255, 255, 255, 0.4);
-        }
-
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-            100% { transform: scale(1); }
-        }
-
+        /* Grid positions for D-pad buttons */
         .d-pad .up {
-            top: 0;
-            left: 50%;
-            transform: translateX(-50%);
-        }
-
-        .d-pad .down {
-            bottom: 0;
-            left: 50%;
-            transform: translateX(-50%);
+            grid-column: 2;
+            grid-row: 1;
         }
 
         .d-pad .left {
-            left: 0;
-            top: 50%;
-            transform: translateY(-50%);
+            grid-column: 1;
+            grid-row: 2;
         }
 
         .d-pad .right {
-            right: 0;
-            top: 50%;
-            transform: translateY(-50%);
+            grid-column: 3;
+            grid-row: 2;
         }
 
+        .d-pad .down {
+            grid-column: 2;
+            grid-row: 3;
+        }
+
+        /* Grid positions for cursor buttons */
         .cursor-pad .up {
-            top: 0;
-            left: 50%;
-            transform: translateX(-50%);
-        }
-
-        .cursor-pad .down {
-            bottom: 0;
-            left: 50%;
-            transform: translateX(-50%);
+            grid-column: 2;
+            grid-row: 1;
         }
 
         .cursor-pad .left {
-            left: 0;
-            top: 50%;
-            transform: translateY(-50%);
+            grid-column: 1;
+            grid-row: 2;
         }
 
         .cursor-pad .right {
-            right: 0;
+            grid-column: 3;
+            grid-row: 2;
+        }
+
+        .cursor-pad .down {
+            grid-column: 2;
+            grid-row: 3;
+        }
+
+        /* Custom NES cursor icon */
+        .nes-cursor {
+            width: 70%;
+            height: 70%;
+            background-image: url('https://raw.githubusercontent.com/nostalgic-css/NES.css/refs/heads/develop/assets/cursor.png');
+            background-size: contain;
+            background-position: center;
+            background-repeat: no-repeat;
+            image-rendering: pixelated;
+            position: absolute;
             top: 50%;
-            transform: translateY(-50%);
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        /* Center icons */
+        .center-icon {
+            grid-column: 2;
+            grid-row: 2;
+            width: var(--center-size);
+            height: var(--center-size);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #ffffff; /* Pure white */
+            border: none; /* Remove border */
+            box-sizing: border-box;
+            align-self: center;
+            justify-self: center;
+            overflow: visible; /* Allow content to overflow if needed */
+            position: relative; /* For absolute positioning of child elements */
+        }
+
+        /* Remove custom ash implementation */
+        .custom-ash {
+            display: none;
+        }
+
+        /* Fix Ash positioning using NES.css implementation */
+        .center-icon .nes-ash {
+            display: inline-block !important;
+            position: absolute !important;
+            top: 50% !important;
+            left: 50% !important;
+            transform: translate(-50%, -50%) !important;
+            margin: 0 !important;
+            /* Explicitly set size to match the NES.css definition */
+            width: 84px !important; /* 14px * 6px (from SCSS) */
+            height: 90px !important; /* 15px * 6px (from SCSS) */
+            transform: translate(-50%, -50%) scale(0.4) !important; /* Reduced scale to match cursor */
+        }
+
+        /* Better approach for centering the Ash icon across all instances */
+        i.nes-ash {
+            position: relative;
+            display: inline-block;
+        }
+
+        /* Remove the hiding style */
+        .d-pad .center-icon i.nes-ash {
+            display: inline-block !important;
         }
 
         .click-button {
-            position: absolute;
-            width: min(100px, 26vw); /* Larger click buttons */
-            height: min(60px, 14vh);
-            background: linear-gradient(to bottom, #ff5c5c, var(--accent));
-            border-radius: var(--button-radius);
+            height: 40px;
+            width: 140px;             /* Increased from 120px to 140px to prevent wrapping */
             display: flex;
             justify-content: center;
             align-items: center;
             font-weight: bold;
-            color: var(--text);
             touch-action: manipulation;
-            border: 2px solid #ff5c5c;
-            outline: none;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3), var(--red-glow);
-            transition: all 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             letter-spacing: 1px;
-            font-size: 1rem; /* Slightly larger font */
+            font-size: 0.8rem;
             cursor: pointer;
-            z-index: 5;
-        }
-
-        .left-click {
-            top: -30px;
-            left: -20px; /* Adjusted to keep on screen */
-        }
-
-        .right-click {
-            top: -30px;
-            right: -20px; /* Adjusted to keep on screen */
-        }
-
-        .click-button.active {
-            transform: scale(0.92);
-            filter: brightness(1.5);
-            box-shadow: 0 0 5px rgba(0, 0, 0, 0.2), 0 0 25px #ff5c5c;
+            transition: transform 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
 
         /* Feedback popup */
@@ -294,121 +285,107 @@
             position: fixed;
             left: 0;
             right: 0;
-            top: 30px;
+            top: 0;
+            bottom: 0;
             display: flex;
             justify-content: center;
+            align-items: center;
             pointer-events: none;
             z-index: 100;
+            overflow: hidden;
         }
 
         .feedback-bubbles {
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 8px;
+            justify-content: center;
+            height: 100%;
+            width: 100%;
+            position: relative;
         }
 
+        /* Simple plain text feedback style */
         .feedback-bubble {
-            background: rgba(10, 10, 35, 0.8);
-            color: white;
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-weight: bold;
-            opacity: 0;
-            transform: translateY(-20px);
-            transition: all 0.2s ease;
-            text-transform: uppercase;
+            position: absolute;
             font-size: 0.8rem;
             letter-spacing: 1px;
-            box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            max-width: 200px;
+            text-transform: uppercase;
+            font-weight: bold;
+            color: var(--text);
             text-align: center;
-        }
-
-        .feedback-bubble.show {
-            opacity: 1;
+            pointer-events: none;
+            opacity: 0.8;
+            padding: 4px 8px;
+            background-color: rgba(255, 255, 255, 0.4);
+            border-radius: 0;
+            border: 2px solid var(--text);
+            animation: shootCommand 1s ease-out forwards;
+            bottom: -50px;
             transform: translateY(0);
         }
 
-        .feedback-bubble.move-up {
-            color: var(--primary-light);
-            border-color: var(--primary-light);
-            box-shadow: 0 0 15px rgba(130, 80, 230, 0.3);
+        @keyframes shootCommand {
+            0% {
+                bottom: -50px;
+                opacity: 0.8;
+            }
+            80% {
+                opacity: 0.6;
+            }
+            100% {
+                bottom: 110%;
+                opacity: 0;
+            }
         }
 
-        .feedback-bubble.move-down {
-            color: var(--primary-light);
-            border-color: var(--primary-light);
-            box-shadow: 0 0 15px rgba(130, 80, 230, 0.3);
-        }
-
-        .feedback-bubble.move-left {
-            color: var(--primary-light);
-            border-color: var(--primary-light);
-            box-shadow: 0 0 15px rgba(130, 80, 230, 0.3);
-        }
-
+        /* Command-specific colors */
+        .feedback-bubble.move-up,
+        .feedback-bubble.move-down,
+        .feedback-bubble.move-left,
         .feedback-bubble.move-right {
-            color: var(--primary-light);
-            border-color: var(--primary-light);
-            box-shadow: 0 0 15px rgba(130, 80, 230, 0.3);
+            border-color: #f7d51d; /* Yellow for movement */
+            color: black;
         }
-
-        .feedback-bubble.cursor-up {
-            color: #40e0ff;
-            border-color: #40e0ff;
-            box-shadow: 0 0 15px rgba(0, 225, 255, 0.3);
-        }
-
-        .feedback-bubble.cursor-down {
-            color: #40e0ff;
-            border-color: #40e0ff;
-            box-shadow: 0 0 15px rgba(0, 225, 255, 0.3);
-        }
-
-        .feedback-bubble.cursor-left {
-            color: #40e0ff;
-            border-color: #40e0ff;
-            box-shadow: 0 0 15px rgba(0, 225, 255, 0.3);
-        }
-
+        
+        .feedback-bubble.cursor-up,
+        .feedback-bubble.cursor-down,
+        .feedback-bubble.cursor-left,
         .feedback-bubble.cursor-right {
-            color: #40e0ff;
-            border-color: #40e0ff;
-            box-shadow: 0 0 15px rgba(0, 225, 255, 0.3);
+            border-color: #209cee; /* Blue for cursor */
         }
-
-        .feedback-bubble.left-click {
-            color: #ff5c5c;
-            border-color: #ff5c5c;
-            box-shadow: 0 0 15px rgba(255, 62, 62, 0.3);
-        }
-
+        
+        .feedback-bubble.left-click,
         .feedback-bubble.right-click {
-            color: #ff5c5c;
-            border-color: #ff5c5c;
-            box-shadow: 0 0 15px rgba(255, 62, 62, 0.3);
+            border-color: #e76e55; /* Red for clicks */
         }
 
-        /* Retro scanlines effect */
-        body::after {
-            content: "";
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: repeating-linear-gradient(
-                0deg,
-                rgba(0, 0, 0, 0.1),
-                rgba(0, 0, 0, 0.1) 1px,
-                transparent 1px,
-                transparent 2px
-            );
-            pointer-events: none;
-            z-index: 10;
-            opacity: 0.3;
+        /* Auto-sizing for small screens */
+        @media screen and (max-height: 480px) {
+            :root {
+                --button-size: min(60px, 15vw); /* Increased from 50px to 60px */
+                --center-size: 45px;            /* Increased from 40px to 45px */
+            }
+            
+            .pad-wrapper {
+                gap: 10px;
+            }
+            
+            .click-button {
+                height: 35px;
+                width: 120px;                   /* Increased from 100px to 120px */
+            }
+        }
+
+        /* Small screen adjustments */
+        @media screen and (max-height: 600px) {            
+            .feedback-container {
+                top: 25px;
+            }
+            
+            .controller-container {
+                gap: 20px;
+            }
         }
 
         /* Landscape orientation styles */
@@ -417,29 +394,6 @@
                 flex-direction: row;
             }
             
-            /* Slight adjustment for extremely short heights */
-            @media (max-height: 400px) {
-                .pad-title {
-                    font-size: 0.7rem;
-                    margin-top: 2px;
-                }
-                
-                .d-pad, .cursor-pad {
-                    width: min(190px, 40vw);
-                    height: min(190px, 40vw);
-                }
-                
-                .control-button {
-                    --button-size: min(75px, 19vw);
-                    font-size: 1.2rem;
-                }
-                
-                .click-button {
-                    height: min(50px, 12vh);
-                    width: min(90px, 24vw);
-                    font-size: 0.9rem;
-                }
-            }
         }
 
         /* Portrait orientation styles */
@@ -457,7 +411,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: var(--dark);
+            background: var(--background);
             color: var(--text);
             justify-content: center;
             align-items: center;
@@ -466,11 +420,31 @@
             z-index: 1000;
             text-align: center;
             padding: 20px;
+            font-family: 'Press Start 2P', cursive;
+        }
+
+        .rotation-prompt-container {
+            padding: 2rem;
+            max-width: 90%;
+            border-color: var(--text);
+            position: relative;
         }
 
         .rotation-prompt .icon {
-            font-size: 48px;
+            font-size: 36px;
+            margin-bottom: 15px;
             animation: rotate 2s ease-in-out infinite;
+            display: block;
+        }
+
+        .rotation-prompt h2 {
+            margin-bottom: 1rem;
+            font-size: 1.2rem;
+        }
+
+        .rotation-prompt p {
+            font-size: 0.7rem;
+            line-height: 1.5;
         }
 
         @keyframes rotate {
@@ -485,13 +459,6 @@
             }
         }
 
-        /* Small screen adjustments */
-        @media screen and (max-height: 600px) {            
-            .feedback-container {
-                top: 25px;
-            }
-        }
-
         /* iPhone X, 11, 12, 13 safe area */
         @supports (padding: max(0px)) {
             body {
@@ -500,15 +467,51 @@
                 padding-bottom: max(5px, env(safe-area-inset-bottom));
             }
         }
+
+        /* Custom NES button styling to match screenshot */
+        .nes-btn {
+            border-image-repeat: stretch !important;
+            padding: 0 !important;
+            line-height: normal !important;
+            margin: 0 !important;
+            border-width: 4px !important;
+            display: flex !important;
+            justify-content: center !important;
+            align-items: center !important;
+        }
+
+        .nes-btn:active, .nes-btn.active {
+            transform: scale(0.94);
+            filter: brightness(0.9);
+            box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Enhanced active state for button press */
+        .control-button.active,
+        .click-button.active {
+            transform: scale(0.94);
+            filter: brightness(0.85);
+            box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Remote active state (when other users press buttons) */
+        .control-button.remote-active,
+        .click-button.remote-active {
+            filter: brightness(1.2);
+        }
     </style>
 </head>
 <body>
     <div class="rotation-prompt">
-        <div class="icon">📱</div>
-        <h2>Please Rotate Your Device</h2>
-        <p>This controller requires landscape orientation</p>
+        <div class="nes-container is-dark rotation-prompt-container">
+            <div class="icon">📱</div>
+            <h2>PLEASE ROTATE</h2>
+            <p>This controller requires landscape orientation</p>
+        </div>
     </div>
 
+    <button id="fullscreen-btn" class="fullscreen-btn nes-btn">FULLSCREEN</button>
+    
     <div class="connection-status">
         <span id="connection-dot"></span>
         <span id="connection-text">Connecting...</span>
@@ -517,29 +520,33 @@
     <div class="controller-container">
         <!-- Movement controls (left) with Left Click -->
         <div class="pad-wrapper">
-            <button class="click-button left-click" data-action="LEFT_CLICK">LEFT</button>
+            <button class="click-button nes-btn is-error" data-action="LEFT_CLICK">L-CLICK</button>
             <div class="pad-container">
                 <div class="d-pad">
-                    <button class="control-button up" data-action="MOVE_UP">W</button>
-                    <button class="control-button down" data-action="MOVE_DOWN">S</button>
-                    <button class="control-button left" data-action="MOVE_LEFT">A</button>
-                    <button class="control-button right" data-action="MOVE_RIGHT">D</button>
+                    <button class="control-button up nes-btn is-warning" data-action="MOVE_UP">W</button>
+                    <button class="control-button left nes-btn is-warning" data-action="MOVE_LEFT">A</button>
+                    <div class="center-icon">
+                        <i class="nes-ash"></i>
+                    </div>
+                    <button class="control-button right nes-btn is-warning" data-action="MOVE_RIGHT">D</button>
+                    <button class="control-button down nes-btn is-warning" data-action="MOVE_DOWN">S</button>
                 </div>
-                <div class="pad-title">Movement <span class="pad-icon">👣</span></div>
             </div>
         </div>
 
         <!-- Cursor controls (right) with Right Click -->
         <div class="pad-wrapper">
-            <button class="click-button right-click" data-action="RIGHT_CLICK">RIGHT</button>
+            <button class="click-button nes-btn is-error" data-action="RIGHT_CLICK">R-CLICK</button>
             <div class="pad-container">
                 <div class="cursor-pad">
-                    <button class="control-button up" data-action="CURSOR_UP">↑</button>
-                    <button class="control-button down" data-action="CURSOR_DOWN">↓</button>
-                    <button class="control-button left" data-action="CURSOR_LEFT">←</button>
-                    <button class="control-button right" data-action="CURSOR_RIGHT">→</button>
+                    <button class="control-button up nes-btn is-primary" data-action="CURSOR_UP">↑</button>
+                    <button class="control-button left nes-btn is-primary" data-action="CURSOR_LEFT">←</button>
+                    <div class="center-icon">
+                        <div class="nes-cursor"></div>
+                    </div>
+                    <button class="control-button right nes-btn is-primary" data-action="CURSOR_RIGHT">→</button>
+                    <button class="control-button down nes-btn is-primary" data-action="CURSOR_DOWN">↓</button>
                 </div>
-                <div class="pad-title">Cursor <span class="cursor-icon">➤</span></div>
             </div>
         </div>
     </div>
@@ -611,20 +618,8 @@
                         if (data.command) {
                             console.log('Received command:', data.command);
                             
-                            // Only show feedback for commands from other users, not our own
-                            if (data.command !== lastSentCommand) {
-                                // Add very subtle visual feedback for commands from other users
-                                const button = document.querySelector(`[data-action="${data.command}"]`);
-                                if (button) {
-                                    // Add a subtle highlight class
-                                    button.classList.add('remote-active');
-                                    
-                                    // Remove it after a shorter delay (150ms instead of 300ms)
-                                    setTimeout(() => {
-                                        button.classList.remove('remote-active');
-                                    }, 150);
-                                }
-                            }
+                            // No longer showing feedback for other users' commands
+                            // as requested by user
                         }
                     } catch (e) {
                         console.error('Error parsing message:', e);
@@ -663,32 +658,26 @@
         // Show feedback bubble
         function showFeedback(command) {
             if (commandFeedback[command]) {
-                // Create a new bubble for each command
+                // Create a simple bubble for each command
                 const bubble = document.createElement('div');
                 bubble.className = 'feedback-bubble ' + commandFeedback[command].class;
                 bubble.textContent = commandFeedback[command].text;
                 
+                // Randomize horizontal position slightly
+                const randomOffset = Math.floor(Math.random() * 41) - 20; // -20 to +20
+                bubble.style.transform = `translateX(${randomOffset}px)`;
+                
                 // Add to the container
                 feedbackBubbles.appendChild(bubble);
                 
-                // Show animation with slight delay to allow DOM update
-                requestAnimationFrame(() => {
-                    requestAnimationFrame(() => {
-                        bubble.classList.add('show');
-                    });
-                });
-                
-                // Remove after animation
+                // Remove after animation completes
                 setTimeout(() => {
-                    bubble.classList.remove('show');
-                    setTimeout(() => {
-                        bubble.remove();
-                    }, 200);
-                }, 800);
+                    bubble.remove();
+                }, 1000); // Match animation duration
                 
                 // Clean up old bubbles if there are too many
                 const bubbleElements = feedbackBubbles.querySelectorAll('.feedback-bubble');
-                if (bubbleElements.length > 5) {
+                if (bubbleElements.length > 10) {
                     bubbleElements[0].remove();
                 }
             }
@@ -811,6 +800,69 @@
         
         // Initialize connection
         connectWebSocket();
+        
+        // Fullscreen functionality
+        const fullscreenBtn = document.getElementById('fullscreen-btn');
+        
+        fullscreenBtn.addEventListener('click', () => {
+            if (!document.fullscreenElement) {
+                // Enter fullscreen
+                if (document.documentElement.requestFullscreen) {
+                    document.documentElement.requestFullscreen();
+                } else if (document.documentElement.webkitRequestFullscreen) { /* Safari */
+                    document.documentElement.webkitRequestFullscreen();
+                } else if (document.documentElement.msRequestFullscreen) { /* IE11 */
+                    document.documentElement.msRequestFullscreen();
+                }
+                fullscreenBtn.textContent = "EXIT";
+            } else {
+                // Exit fullscreen
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                } else if (document.webkitExitFullscreen) { /* Safari */
+                    document.webkitExitFullscreen();
+                } else if (document.msExitFullscreen) { /* IE11 */
+                    document.msExitFullscreen();
+                }
+                fullscreenBtn.textContent = "FULLSCREEN";
+            }
+            
+            // Slight delay to allow fullscreen to take effect before repositioning elements
+            setTimeout(() => {
+                window.dispatchEvent(new Event('resize'));
+            }, 100);
+        });
+        
+        // Update fullscreen button text when fullscreen state changes
+        document.addEventListener('fullscreenchange', () => {
+            if (document.fullscreenElement) {
+                fullscreenBtn.textContent = "EXIT";
+            } else {
+                fullscreenBtn.textContent = "FULLSCREEN";
+            }
+        });
+        
+        // Handle safe area insets for notched phones
+        function updateSafeAreaPadding() {
+            // Get the actual viewport dimensions
+            const vh = window.innerHeight;
+            const vw = window.innerWidth;
+            
+            // Apply dynamic CSS variable for better control in media queries
+            document.documentElement.style.setProperty('--viewport-height', `${vh}px`);
+            document.documentElement.style.setProperty('--viewport-width', `${vw}px`);
+            
+            // If in landscape and height is constrained, reduce padding and spacing
+            if (window.innerWidth > window.innerHeight && window.innerHeight < 500) {
+                document.body.classList.add('height-constrained');
+            } else {
+                document.body.classList.remove('height-constrained');
+            }
+        }
+        
+        // Call on initial load and resize
+        updateSafeAreaPadding();
+        window.addEventListener('resize', updateSafeAreaPadding);
     </script>
 </body>
 </html>
