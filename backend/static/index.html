@@ -15,7 +15,7 @@
             --light: #f0f0ff;             /* Slightly blue-tinted white */
             --text: #ffffff;              /* White text */
             --text-secondary: rgba(255, 255, 255, 0.8);
-            --button-size: min(80px, 20vw); /* Responsive button size */
+            --button-size: min(85px, 22vw); /* Slightly larger buttons */
             --button-radius: 12px;        /* Slightly rounder buttons */
             --neon-glow: 0 0 15px rgba(255, 255, 255, 0.6), 0 0 30px rgba(120, 0, 255, 0.4);
             --cyan-glow: 0 0 15px rgba(0, 225, 255, 0.6), 0 0 30px rgba(0, 170, 255, 0.4);
@@ -42,7 +42,7 @@
             overflow: hidden;
             display: flex;
             flex-direction: column;
-            justify-content: space-between;
+            justify-content: center;
             padding: 5px;
         }
 
@@ -75,14 +75,24 @@
         .controller-container {
             display: flex;
             flex: 1;
-            gap: 10px;
+            gap: 40px; /* Increased gap between pads */
             overflow: hidden;
-            margin-top: 10px;
-            max-height: calc(100vh - 120px);
+            justify-content: space-between; /* Back to space-between for side alignment */
+            align-items: center;
+            padding: 0 8%; /* Balanced padding to keep elements on screen */
+            max-width: 1200px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .pad-wrapper {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
 
         .pad-container {
-            flex: 1;
             display: flex;
             flex-direction: column;
             justify-content: center;
@@ -93,7 +103,7 @@
         .pad-title {
             color: var(--text-secondary);
             font-size: 0.9rem;
-            margin-bottom: 8px;
+            margin-top: 8px; /* Changed from margin-bottom to margin-top */
             font-weight: bold;
             letter-spacing: 1px;
             text-align: center;
@@ -118,10 +128,9 @@
 
         .d-pad, .cursor-pad {
             position: relative;
-            width: min(200px, 45vw);
-            height: min(200px, 45vw);
+            width: min(210px, 48vw); /* Slightly larger pads */
+            height: min(210px, 48vw);
             border-radius: 50%;
-            margin-bottom: 10px;
         }
 
         .d-pad {
@@ -148,7 +157,7 @@
             border: none;
             outline: none;
             transition: all 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            font-size: 1.3rem;
+            font-size: 1.4rem; /* Slightly larger font */
             cursor: pointer;
         }
 
@@ -225,17 +234,10 @@
             transform: translateY(-50%);
         }
 
-        .click-container {
-            display: flex;
-            justify-content: center;
-            gap: 20px;
-            padding: 10px 0 15px;
-            width: 100%;
-        }
-
         .click-button {
-            width: min(130px, 40vw);
-            height: min(60px, 12vh);
+            position: absolute;
+            width: min(100px, 26vw); /* Larger click buttons */
+            height: min(60px, 14vh);
             background: linear-gradient(to bottom, #ff5c5c, var(--accent));
             border-radius: var(--button-radius);
             display: flex;
@@ -249,8 +251,19 @@
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3), var(--red-glow);
             transition: all 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             letter-spacing: 1px;
-            font-size: 0.9rem;
+            font-size: 1rem; /* Slightly larger font */
             cursor: pointer;
+            z-index: 5;
+        }
+
+        .left-click {
+            top: -30px;
+            left: -20px; /* Adjusted to keep on screen */
+        }
+
+        .right-click {
+            top: -30px;
+            right: -20px; /* Adjusted to keep on screen */
         }
 
         .click-button.active {
@@ -387,34 +400,27 @@
                 flex-direction: row;
             }
             
-            .pad-container {
-                padding-bottom: 0;
-            }
-            
             /* Slight adjustment for extremely short heights */
             @media (max-height: 400px) {
                 .pad-title {
                     font-size: 0.7rem;
-                    margin-bottom: 2px;
+                    margin-top: 2px;
                 }
                 
                 .d-pad, .cursor-pad {
-                    width: min(180px, 35vw);
-                    height: min(180px, 35vw);
+                    width: min(190px, 40vw);
+                    height: min(190px, 40vw);
                 }
                 
                 .control-button {
-                    --button-size: min(70px, 18vw);
-                    font-size: 1.1rem;
-                }
-                
-                .click-container {
-                    padding: 5px 0 10px;
+                    --button-size: min(75px, 19vw);
+                    font-size: 1.2rem;
                 }
                 
                 .click-button {
-                    height: min(50px, 10vh);
-                    font-size: 0.8rem;
+                    height: min(50px, 12vh);
+                    width: min(90px, 24vw);
+                    font-size: 0.9rem;
                 }
             }
         }
@@ -423,24 +429,29 @@
         @media screen and (orientation: portrait) {
             .controller-container {
                 flex-direction: column;
-                margin-bottom: 10px;
+                gap: 25px;
+                padding: 0 5%; /* Less padding in portrait mode */
             }
             
-            .pad-container {
-                padding-bottom: 5px;
+            .click-button {
+                height: min(55px, 10vh);
+                width: min(110px, 30vw);
+                font-size: 0.95rem;
             }
             
-            .click-container {
-                margin-top: auto;
+            .left-click {
+                top: -25px;
+                left: -15px; /* Adjusted for portrait */
+            }
+
+            .right-click {
+                top: -25px;
+                right: -15px; /* Adjusted for portrait */
             }
         }
 
         /* Small screen adjustments */
-        @media screen and (max-height: 600px) {
-            .pad-title {
-                margin-bottom: 5px;
-            }
-            
+        @media screen and (max-height: 600px) {            
             .feedback-container {
                 top: 25px;
             }
@@ -463,33 +474,33 @@
     </div>
 
     <div class="controller-container">
-        <!-- Movement controls (left) -->
-        <div class="pad-container">
-            <div class="pad-title">Movement <span class="pad-icon">👣</span></div>
-            <div class="d-pad">
-                <button class="control-button up" data-action="MOVE_UP">W</button>
-                <button class="control-button down" data-action="MOVE_DOWN">S</button>
-                <button class="control-button left" data-action="MOVE_LEFT">A</button>
-                <button class="control-button right" data-action="MOVE_RIGHT">D</button>
+        <!-- Movement controls (left) with Left Click -->
+        <div class="pad-wrapper">
+            <button class="click-button left-click" data-action="LEFT_CLICK">LEFT</button>
+            <div class="pad-container">
+                <div class="d-pad">
+                    <button class="control-button up" data-action="MOVE_UP">W</button>
+                    <button class="control-button down" data-action="MOVE_DOWN">S</button>
+                    <button class="control-button left" data-action="MOVE_LEFT">A</button>
+                    <button class="control-button right" data-action="MOVE_RIGHT">D</button>
+                </div>
+                <div class="pad-title">Movement <span class="pad-icon">👣</span></div>
             </div>
         </div>
 
-        <!-- Cursor controls (right) -->
-        <div class="pad-container">
-            <div class="pad-title">Cursor <span class="cursor-icon">➤</span></div>
-            <div class="cursor-pad">
-                <button class="control-button up" data-action="CURSOR_UP">↑</button>
-                <button class="control-button down" data-action="CURSOR_DOWN">↓</button>
-                <button class="control-button left" data-action="CURSOR_LEFT">←</button>
-                <button class="control-button right" data-action="CURSOR_RIGHT">→</button>
+        <!-- Cursor controls (right) with Right Click -->
+        <div class="pad-wrapper">
+            <button class="click-button right-click" data-action="RIGHT_CLICK">RIGHT</button>
+            <div class="pad-container">
+                <div class="cursor-pad">
+                    <button class="control-button up" data-action="CURSOR_UP">↑</button>
+                    <button class="control-button down" data-action="CURSOR_DOWN">↓</button>
+                    <button class="control-button left" data-action="CURSOR_LEFT">←</button>
+                    <button class="control-button right" data-action="CURSOR_RIGHT">→</button>
+                </div>
+                <div class="pad-title">Cursor <span class="cursor-icon">➤</span></div>
             </div>
         </div>
-    </div>
-
-    <!-- Click buttons -->
-    <div class="click-container">
-        <button class="click-button" data-action="LEFT_CLICK">LEFT CLICK</button>
-        <button class="click-button" data-action="RIGHT_CLICK">RIGHT CLICK</button>
     </div>
 
     <!-- Feedback popup -->
