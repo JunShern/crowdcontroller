@@ -4,10 +4,10 @@ from enum import Enum
 
 class Action(Enum):
     # Character movement
-    MOVE_UP = "W"
-    MOVE_LEFT = "A"
-    MOVE_DOWN = "S"
-    MOVE_RIGHT = "D"
+    MOVE_UP = "MOVE_UP"
+    MOVE_LEFT = "MOVE_LEFT"
+    MOVE_DOWN = "MOVE_DOWN"
+    MOVE_RIGHT = "MOVE_RIGHT"
     
     # Mouse clicks
     LEFT_CLICK = "LEFT_CLICK"
