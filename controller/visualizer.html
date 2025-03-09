@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Crowd Controller Visualization</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        #timer {
+            font-size: 16px;
+            text-align: center;
+            margin: 10px 0 20px 0;
+            color: #555;
+        }
+        #commands {
+            margin-top: 20px;
+        }
+        .command-bar {
+            height: 30px;
+            margin: 5px 0;
+            display: flex;
+            align-items: center;
+        }
+        .bar {
+            height: 100%;
+            display: inline-block;
+            transition: width 0.3s, background-color 0.3s;
+            min-width: 2px;
+        }
+        .top-command {
+            border: 2px solid #333;
+            box-shadow: 0 0 5px rgba(0,0,0,0.2);
+            position: relative;
+        }
+        .top-command::after {
+            content: "NEXT";
+            font-size: 10px;
+            position: absolute;
+            right: -40px;
+            top: 50%;
+            transform: translateY(-50%);
+            background-color: #333;
+            color: white;
+            padding: 2px 5px;
+            border-radius: 3px;
+        }
+        .label {
+            margin-left: 10px;
+            font-size: 14px;
+        }
+        #command-history {
+            margin-top: 30px;
+            padding: 10px;
+            background-color: #f0f8ff;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
+        .history-item {
+            padding: 5px 10px;
+            margin: 5px 0;
+            border-bottom: 1px solid #eee;
+            font-size: 14px;
+        }
+        .history-item:last-child {
+            border-bottom: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div id="commands">
+            <h2>Votes</h2>
+            <!-- Command bars will be added here by JavaScript -->
+            <div id="timer"></div>
+        </div>
+        
+        <div id="command-history">
+            <h2>Command History</h2>
+            <div id="history-list">
+                <!-- Command history will be added here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // WebSocket connection
+        const socket = new WebSocket(`ws://${window.location.host}/visualize`);
+        
+        // Keep track of command history
+        const commandHistory = [];
+        
+        // Color mapping for commands to ensure consistency
+        const commandColors = {};
+        
+        // Array of distinct colors for the bars
+        const colorPalette = [
+            '#4CAF50', // Green
+            '#2196F3', // Blue
+            '#FF9800', // Orange
+            '#E91E63', // Pink
+            '#9C27B0', // Purple
+            '#009688', // Teal
+            '#F44336', // Red
+            '#FFEB3B', // Yellow
+            '#795548', // Brown
+            '#607D8B', // Blue Grey
+            '#3F51B5', // Indigo
+            '#00BCD4', // Cyan
+            '#8BC34A', // Light Green
+            '#FFC107', // Amber
+            '#673AB7', // Deep Purple
+            '#CDDC39', // Lime
+            '#9E9E9E', // Grey
+            '#FF5722', // Deep Orange
+            '#03A9F4', // Light Blue
+            '#8BC34A'  // Light Green
+        ];
+        let colorIndex = 0;
+        
+        // Function to get a color for a command
+        function getCommandColor(command) {
+            if (!commandColors[command]) {
+                commandColors[command] = colorPalette[colorIndex % colorPalette.length];
+                colorIndex++;
+            }
+            return commandColors[command];
+        }
+        
+        socket.onopen = function(e) {
+            console.log("WebSocket connection established");
+        };
+        
+        socket.onmessage = function(event) {
+            const data = JSON.parse(event.data);
+            
+            // Skip individual command events - we don't need to display them
+            if (data.type === 'command') {
+                return;
+            }
+            
+            // Update timer - round to whole number
+            const remainingSeconds = Math.round(data.remaining);
+            document.getElementById('timer').innerText = `The top-voted command will be executed in ${remainingSeconds} seconds...`;
+            
+            // Update command bars
+            const commandsDiv = document.getElementById('commands');
+            // Clear existing bars (except the heading and timer)
+            while (commandsDiv.children.length > 2) {
+                commandsDiv.removeChild(commandsDiv.lastChild);
+            }
+            
+            // Sort commands by count (largest to smallest)
+            const commandEntries = Object.entries(data.commands).sort((a, b) => b[1] - a[1]);
+            
+            // Add bars for each command
+            const total = data.total || 1; // Avoid division by zero
+            commandEntries.forEach(([cmd, count], index) => {
+                const percentage = (count / total * 100).toFixed(1);
+                
+                const barContainer = document.createElement('div');
+                barContainer.className = 'command-bar';
+                
+                const bar = document.createElement('div');
+                bar.className = 'bar';
+                if (index === 0) {
+                    bar.classList.add('top-command');
+                }
+                bar.style.width = `${percentage}%`;
+                bar.style.backgroundColor = getCommandColor(cmd);
+                
+                const label = document.createElement('div');
+                label.className = 'label';
+                label.innerText = `${cmd}: ${count} (${percentage}%)`;
+                
+                barContainer.appendChild(bar);
+                barContainer.appendChild(label);
+                commandsDiv.appendChild(barContainer);
+            });
+            
+            // Update command history if a command was executed
+            if (data.last_executed && !commandHistory.some(item => 
+                item.command === data.last_executed.command && 
+                item.timestamp === data.last_executed.timestamp)) {
+                
+                // Add to history array
+                commandHistory.unshift(data.last_executed);
+                
+                // Keep only the last 20 commands
+                if (commandHistory.length > 20) {
+                    commandHistory.pop();
+                }
+                
+                // Update history display
+                updateHistoryDisplay();
+            }
+        };
+        
+        function updateHistoryDisplay() {
+            const historyList = document.getElementById('history-list');
+            // Clear existing items
+            historyList.innerHTML = '';
+            
+            // Add history items
+            commandHistory.forEach(item => {
+                // Convert timestamp from 24-hour to AM/PM format
+                const formattedTime = formatTimeToAMPM(item.timestamp);
+                
+                const historyItem = document.createElement('div');
+                historyItem.className = 'history-item';
+                
+                // Create color swatch for the command
+                const colorSwatch = document.createElement('span');
+                colorSwatch.style.display = 'inline-block';
+                colorSwatch.style.width = '10px';
+                colorSwatch.style.height = '10px';
+                colorSwatch.style.backgroundColor = getCommandColor(item.command);
+                colorSwatch.style.marginRight = '5px';
+                
+                historyItem.appendChild(colorSwatch);
+                historyItem.appendChild(document.createTextNode(
+                    `${formattedTime}: ${item.command} (${item.count} votes)`
+                ));
+                
+                historyList.appendChild(historyItem);
+            });
+        }
+        
+        // Function to convert HH:MM:SS to h:MM:SS AM/PM
+        function formatTimeToAMPM(timeStr) {
+            const [hours, minutes, seconds] = timeStr.split(':');
+            const hourNum = parseInt(hours, 10);
+            const ampm = hourNum >= 12 ? 'PM' : 'AM';
+            const hour12 = hourNum % 12 || 12; // Convert 0 to 12 for 12 AM
+            return `${hour12}:${minutes}:${seconds} ${ampm}`;
+        }
+        
+        socket.onclose = function(event) {
+            console.log("WebSocket connection closed");
+            // Attempt to reconnect after a delay
+            setTimeout(() => {
+                location.reload();
+            }, 5000);
+        };
+        
+        socket.onerror = function(error) {
+            console.error("WebSocket error:", error);
+        };
+    </script>
+</body>
+</html> 
