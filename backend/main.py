@@ -6,6 +6,7 @@ import uvicorn
 from collections import defaultdict
 import logging
 import os
+import json  # Add json import
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -58,7 +59,7 @@ async def websocket_endpoint(websocket: WebSocket):
             data = await websocket.receive_text()
             logger.info(f"Received data: {data}")
             commands_count[data] += 1  # Aggregate commands
-            await broadcast(str(commands_count))  # Broadcast update
+            await broadcast(json.dumps(dict(commands_count)))  # Convert to JSON string
     except WebSocketDisconnect:
         logger.info("WebSocket disconnected")
         connections.remove(websocket)

@@ -586,9 +586,8 @@
                 
                 ws.onmessage = function(event) {
                     try {
-                        // Parse stats data
-                        const data = event.data.replace(/'/g, '"'); // Replace single quotes with double quotes
-                        const stats = JSON.parse(data);
+                        // Parse JSON data directly - no need for string replacement
+                        const stats = JSON.parse(event.data);
                         
                         // Log stats to console
                         console.log('Command Stats:', stats);
