@@ -1,9 +1,6 @@
 import pyautogui
 import time
 from enum import Enum
-from typing import List, Optional
-from queue import Queue
-from threading import Thread
 
 class Action(Enum):
     # Character movement
@@ -21,81 +18,54 @@ class Action(Enum):
     CURSOR_DOWN = "CURSOR_DOWN"
     CURSOR_LEFT = "CURSOR_LEFT"
     CURSOR_RIGHT = "CURSOR_RIGHT"
-    # Add more actions as needed
 
 class Controller:
-    def __init__(self, frequency: float, cursor_step: int, key_press_duration: float):
+    def __init__(self, cursor_step=50, key_press_duration=0.1):
         """
         Initialize the controller.
         
         Args:
-            frequency (float): How many times per second to process commands (Hz)
             cursor_step (int): Number of pixels to move cursor for each cursor movement action
             key_press_duration (float): Duration to hold keys and mouse buttons (seconds)
         """
-        self.frequency = frequency
-        self.cursor_step = cursor_step
-        self.command_queue: Queue[Action] = Queue()
-        self.is_running = False
-        self._control_thread: Optional[Thread] = None
-        
         # Safety feature
         pyautogui.FAILSAFE = True
-        # Set a small delay between pyautogui commands
-        pyautogui.PAUSE = 0.1
         
-        # Key and mouse press duration in seconds
+        # Set a small delay between pyautogui commands
+        pyautogui.PAUSE = 0.05
+        
+        # Configuration
+        self.cursor_step = cursor_step
         self.key_press_duration = key_press_duration
+        
+        print(f"Controller initialized (cursor_step={cursor_step}, key_press_duration={key_press_duration})")
     
-    def start(self):
-        """Start the controller in a separate thread."""
-        if self.is_running:
-            return
-            
-        self.is_running = True
-        self._control_thread = Thread(target=self._control_loop)
-        self._control_thread.daemon = True  # Thread will exit when main program exits
-        self._control_thread.start()
-    
-    def stop(self):
-        """Stop the controller."""
-        self.is_running = False
-        if self._control_thread:
-            self._control_thread.join()
-    
-    def add_command(self, action: Action):
+    def execute(self, action):
         """
-        Add a command to the queue for processing.
+        Execute an action immediately.
         
         Args:
-            action (Action): The action to be performed
+            action (Action): The action to be performed (or a string that can be converted to an Action)
         """
-        self.command_queue.put(action)
-    
-    def _control_loop(self):
-        """Main control loop that processes commands at the specified frequency."""
-        period = 1.0 / self.frequency
-        
-        while self.is_running:
-            loop_start = time.time()
-            
-            # Process any available commands
-            self._process_next_command()
-            
-            # Sleep for remaining time to maintain frequency
-            elapsed = time.time() - loop_start
-            sleep_time = max(0, period - elapsed)
-            time.sleep(sleep_time)
-    
-    def _process_next_command(self):
-        """Process the next command in the queue if one exists."""
-        if self.command_queue.empty():
+        # Convert string to Action if needed
+        if isinstance(action, str):
+            try:
+                # Check if the string matches any Action name (not value)
+                action = Action[action]
+            except KeyError:
+                # If not, try to see if it matches any Action value
+                try:
+                    action = Action(action)
+                except ValueError:
+                    print(f"Error: Invalid action '{action}'. Valid actions: {[a.name for a in Action]}")
+                    return
+        elif not isinstance(action, Action):
+            print(f"Error: Invalid action type {type(action)}. Expected Action enum or string.")
             return
-            
-        action = self.command_queue.get()
         
         try:
-            print(f"Processing action: {action}")
+            print(f"Executing action: {action.name}")
+            
             # Handle character movement
             if action == Action.MOVE_UP:
                 pyautogui.keyDown('w')
@@ -133,38 +103,32 @@ class Controller:
                 pyautogui.moveRel(-self.cursor_step, 0)
             elif action == Action.CURSOR_RIGHT:
                 pyautogui.moveRel(self.cursor_step, 0)
-            
+                
         except pyautogui.FailSafeException:
             print("Failsafe triggered - mouse moved to corner")
-            self.stop()
         except Exception as e:
             print(f"Error processing action {action}: {str(e)}")
 
-# Example usage:
+# Example usage (only runs if this file is executed directly)
 if __name__ == "__main__":
-    time.sleep(5)  # time to focus on the desired window
-
-    controller = Controller(frequency=0.5, cursor_step=50, key_press_duration=0.1)
+    print("Testing Controller with some basic commands...")
+    controller = Controller()
     
-    # Example commands
-    controller.add_command(Action.MOVE_UP)
-    controller.add_command(Action.MOVE_DOWN)
-    controller.add_command(Action.MOVE_LEFT)
-    controller.add_command(Action.MOVE_RIGHT)
-    controller.add_command(Action.CURSOR_RIGHT)  # Move cursor 20px right
-    controller.add_command(Action.CURSOR_DOWN)   # Move cursor 20px down
-    controller.add_command(Action.LEFT_CLICK)
-    controller.add_command(Action.LEFT_CLICK)
-    controller.add_command(Action.RIGHT_CLICK)
-    controller.add_command(Action.LEFT_CLICK)
-    controller.add_command(Action.LEFT_CLICK)
-    controller.add_command(Action.RIGHT_CLICK)
+    # Give user time to switch to a window
+    print("Starting in 5 seconds... Switch to the desired application window")
+    for i in range(5, 0, -1):
+        print(f"{i}...")
+        time.sleep(1)
     
-    # Start the controller
-    controller.start()
+    # Test some actions
+    controller.execute(Action.MOVE_UP)
+    time.sleep(0.5)
+    controller.execute(Action.MOVE_DOWN)
+    time.sleep(0.5)
+    controller.execute(Action.CURSOR_RIGHT)
+    time.sleep(0.5)
+    controller.execute(Action.CURSOR_LEFT)
+    time.sleep(0.5)
+    controller.execute(Action.LEFT_CLICK)
     
-    # Let it run for a few seconds
-    time.sleep(30)
-    
-    # Stop the controller
-    controller.stop()
+    print("Test complete!")
