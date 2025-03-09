@@ -24,7 +24,7 @@ logger = logging.getLogger('CrowdAggregator')
 
 # Configuration
 WEBSOCKET_URI = "wss://uvicorn-backendmain-production.up.railway.app/ws"
-AGGREGATION_WINDOW = 10  # seconds
+AGGREGATION_WINDOW = 5  # seconds
 WEB_PORT = 8080  # Port for visualization web server
 
 # Path to the HTML template file (relative to this script)
