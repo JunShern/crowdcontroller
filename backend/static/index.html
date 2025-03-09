@@ -186,6 +186,23 @@
             box-shadow: 0 0 5px rgba(0, 0, 0, 0.2), 0 0 25px #40e0ff;
         }
 
+        /* Remote active state (when other users press buttons) */
+        .control-button.remote-active {
+            filter: brightness(1.1);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3), 0 0 8px rgba(255, 255, 255, 0.4);
+        }
+
+        .click-button.remote-active {
+            filter: brightness(1.1);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3), 0 0 8px rgba(255, 255, 255, 0.4);
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
         .d-pad .up {
             top: 0;
             left: 50%;
@@ -544,6 +561,7 @@
         let reconnectAttempt = 0;
         const maxReconnectAttempts = 5;
         let lastCommandTime = 0;
+        let lastSentCommand = null; // Track the last command sent by this user
         
         // Command feedback mapping
         const commandFeedback = {
@@ -586,14 +604,31 @@
                 
                 ws.onmessage = function(event) {
                     try {
-                        // Parse JSON data directly - no need for string replacement
-                        const stats = JSON.parse(event.data);
+                        // Parse the command data
+                        const data = JSON.parse(event.data);
                         
-                        // Log stats to console
-                        console.log('Command Stats:', stats);
+                        // Log the received command
+                        if (data.command) {
+                            console.log('Received command:', data.command);
+                            
+                            // Only show feedback for commands from other users, not our own
+                            if (data.command !== lastSentCommand) {
+                                // Add very subtle visual feedback for commands from other users
+                                const button = document.querySelector(`[data-action="${data.command}"]`);
+                                if (button) {
+                                    // Add a subtle highlight class
+                                    button.classList.add('remote-active');
+                                    
+                                    // Remove it after a shorter delay (150ms instead of 300ms)
+                                    setTimeout(() => {
+                                        button.classList.remove('remote-active');
+                                    }, 150);
+                                }
+                            }
+                        }
                     } catch (e) {
-                        console.error('Error parsing stats:', e);
-                        console.log('Raw stats data:', event.data);
+                        console.error('Error parsing message:', e);
+                        console.log('Raw message data:', event.data);
                     }
                 };
                 
@@ -662,10 +697,16 @@
         // Send command function
         function sendCommand(command) {
             if (ws && ws.readyState === WebSocket.OPEN) {
+                lastSentCommand = command; // Record this command as sent by this user
                 ws.send(command);
                 vibrateIfSupported();
                 showFeedback(command);
                 console.log('Sent command:', command);
+                
+                // Reset the lastSentCommand after a short delay
+                setTimeout(() => {
+                    lastSentCommand = null;
+                }, 500);
             } else {
                 console.warn('Cannot send command: WebSocket not connected');
                 connectionText.textContent = 'Not connected';
