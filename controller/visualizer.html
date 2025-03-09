@@ -2,32 +2,40 @@
 <html>
 <head>
     <title>Crowd Controller Visualization</title>
+    <!-- Include NES.css and required Press Start 2P font -->
+    <link href="https://fonts.googleapis.com/css?family=Press+Start+2P" rel="stylesheet">
+    <link href="https://unpkg.com/nes.css@latest/css/nes.min.css" rel="stylesheet" />
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
-            background-color: #f5f5f5;
+        html, body {
+            font-family: 'Press Start 2P', cursive;
+            margin: 0;
+            padding: 0;
+            background-color: #202020;
+            color: #fff;
         }
         .container {
-            max-width: 800px;
-            margin: 0 auto;
-            background-color: white;
+            max-width: 720px;
+            margin: 20px auto;
+            background-color: #202020;
             padding: 20px;
             border-radius: 5px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            image-rendering: pixelated;
         }
         #timer {
-            font-size: 16px;
+            font-size: 14px;
             text-align: center;
             margin: 10px 0 20px 0;
-            color: #555;
+            color: #fff;
+        }
+        #timer-value {
+            color: #92cc41;
         }
         #commands {
             margin-top: 20px;
         }
         .command-bar {
             height: 30px;
-            margin: 5px 0;
+            margin: 10px 0;
             display: flex;
             align-items: center;
         }
@@ -36,56 +44,99 @@
             display: inline-block;
             transition: width 0.3s, background-color 0.3s;
             min-width: 2px;
+            image-rendering: pixelated;
+            box-shadow: 0 4px 0 rgba(0, 0, 0, 0.3);
         }
         .top-command {
-            border: 2px solid #333;
-            box-shadow: 0 0 5px rgba(0,0,0,0.2);
+            border: 4px solid #fff;
             position: relative;
-        }
-        .top-command::after {
-            content: "NEXT";
-            font-size: 10px;
-            position: absolute;
-            right: -40px;
-            top: 50%;
-            transform: translateY(-50%);
-            background-color: #333;
-            color: white;
-            padding: 2px 5px;
-            border-radius: 3px;
         }
         .label {
             margin-left: 10px;
-            font-size: 14px;
+            font-size: 12px;
         }
         #command-history {
             margin-top: 30px;
             padding: 10px;
-            background-color: #f0f8ff;
-            border-radius: 5px;
-            border: 1px solid #ddd;
+            border: 4px solid #fff;
+            image-rendering: pixelated;
         }
         .history-item {
             padding: 5px 10px;
             margin: 5px 0;
-            border-bottom: 1px solid #eee;
-            font-size: 14px;
+            border-bottom: 2px solid #424242;
+            font-size: 12px;
         }
         .history-item:last-child {
             border-bottom: none;
         }
+        
+        /* NES.css specific overrides */
+        .nes-container {
+            margin-bottom: 20px;
+        }
+        
+        h2 {
+            font-size: 16px;
+            color: #fff;
+            margin-bottom: 15px;
+        }
+        
+        /* Scanlines effect for retro feel */
+        .scanlines {
+            position: relative;
+        }
+        .scanlines::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: repeating-linear-gradient(
+                to bottom,
+                rgba(0, 0, 0, 0.15),
+                rgba(0, 0, 0, 0.15) 1px,
+                transparent 1px,
+                transparent 2px
+            );
+            pointer-events: none;
+            z-index: 10;
+        }
+        
+        /* CRT flicker effect */
+        @keyframes flicker {
+            0% { opacity: 0.97; }
+            5% { opacity: 0.9; }
+            10% { opacity: 0.97; }
+            15% { opacity: 1; }
+            20% { opacity: 0.97; }
+            25% { opacity: 0.9; }
+            30% { opacity: 0.97; }
+            35% { opacity: 1; }
+            40% { opacity: 0.97; }
+            50% { opacity: 1; }
+            60% { opacity: 0.97; }
+            70% { opacity: 1; }
+            80% { opacity: 0.97; }
+            90% { opacity: 0.9; }
+            100% { opacity: 0.97; }
+        }
+        .crt-flicker {
+            animation: flicker 5s infinite;
+        }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div id="commands">
-            <h2>Votes</h2>
+    <div class="container scanlines crt-flicker">
+        <div id="commands" class="nes-container is-dark with-title">
+            <p class="title">Votes</p>
             <!-- Command bars will be added here by JavaScript -->
-            <div id="timer"></div>
+            <div id="timer">The top-voted command will be executed in <span id="timer-value"></span> seconds...</div>
         </div>
         
-        <div id="command-history">
-            <h2>Command History</h2>
+        <div id="command-history" class="nes-container is-dark with-title">
+            <p class="title">Command History</p>
             <div id="history-list">
                 <!-- Command history will be added here -->
             </div>
@@ -102,28 +153,28 @@
         // Color mapping for commands to ensure consistency
         const commandColors = {};
         
-        // Array of distinct colors for the bars
+        // Array of distinct colors for the bars - using NES.css palette
         const colorPalette = [
-            '#4CAF50', // Green
-            '#2196F3', // Blue
-            '#FF9800', // Orange
-            '#E91E63', // Pink
-            '#9C27B0', // Purple
-            '#009688', // Teal
-            '#F44336', // Red
-            '#FFEB3B', // Yellow
-            '#795548', // Brown
-            '#607D8B', // Blue Grey
-            '#3F51B5', // Indigo
-            '#00BCD4', // Cyan
-            '#8BC34A', // Light Green
-            '#FFC107', // Amber
-            '#673AB7', // Deep Purple
-            '#CDDC39', // Lime
-            '#9E9E9E', // Grey
-            '#FF5722', // Deep Orange
-            '#03A9F4', // Light Blue
-            '#8BC34A'  // Light Green
+            '#92cc41', // NES green
+            '#209cee', // NES blue
+            '#f7d51d', // NES yellow
+            '#e76e55', // NES red
+            '#76c2af', // Teal
+            '#c77dff', // Purple
+            '#ff8080', // Light Red
+            '#ffcc66', // Light Orange
+            '#88c0d0', // Light Blue
+            '#a3be8c', // Light Green
+            '#ebcb8b', // Light Yellow
+            '#d08770', // Light Red-Orange
+            '#b48ead', // Light Purple
+            '#5e81ac', // Dark Blue
+            '#bf616a', // Dark Red
+            '#d08770', // Dark Orange
+            '#eceff4', // Light Gray
+            '#e5e9f0', // Mid Gray
+            '#d8dee9', // Dark Gray
+            '#4c566a'  // Very Dark Gray
         ];
         let colorIndex = 0;
         
@@ -150,19 +201,21 @@
             
             // Update timer - round to whole number
             const remainingSeconds = Math.round(data.remaining);
-            document.getElementById('timer').innerText = `The top-voted command will be executed in ${remainingSeconds} seconds...`;
+            document.getElementById('timer-value').innerText = remainingSeconds;
             
             // Update command bars
             const commandsDiv = document.getElementById('commands');
-            // Clear existing bars (except the heading and timer)
-            while (commandsDiv.children.length > 2) {
-                commandsDiv.removeChild(commandsDiv.lastChild);
-            }
+            // Find where to insert bars (after title and timer)
+            const timerElement = document.getElementById('timer');
+            
+            // Remove existing bars
+            const existingBars = document.querySelectorAll('.command-bar');
+            existingBars.forEach(bar => bar.remove());
             
             // Sort commands by count (largest to smallest)
             const commandEntries = Object.entries(data.commands).sort((a, b) => b[1] - a[1]);
             
-            // Add bars for each command
+            // Add bars for each command after the timer
             const total = data.total || 1; // Avoid division by zero
             commandEntries.forEach(([cmd, count], index) => {
                 const percentage = (count / total * 100).toFixed(1);
@@ -180,7 +233,7 @@
                 
                 const label = document.createElement('div');
                 label.className = 'label';
-                label.innerText = `${cmd}: ${count} (${percentage}%)`;
+                label.innerText = `${cmd}: ${count}`;
                 
                 barContainer.appendChild(bar);
                 barContainer.appendChild(label);
