@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>WebSocket Diagnostic</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        .card { border: 1px solid #ccc; border-radius: 4px; padding: 15px; margin-bottom: 15px; }
+        .log { background-color: #f5f5f5; padding: 10px; border-radius: 4px; height: 200px; overflow-y: auto; font-family: monospace; }
+        .controls { margin: 15px 0; }
+        button { margin-right: 10px; padding: 8px 12px; cursor: pointer; }
+        .connected { color: green; }
+        .disconnected { color: red; }
+        .attempting { color: orange; }
+    </style>
+</head>
+<body>
+    <h1>WebSocket Diagnostic Tool</h1>
+    
+    <div class="card">
+        <h2>Connection Information</h2>
+        <p>Page URL: <span id="page-url"></span></p>
+        <p>WebSocket URL: <span id="ws-url"></span></p>
+        <p>Status: <span id="connection-status" class="disconnected">Disconnected</span></p>
+    </div>
+    
+    <div class="card">
+        <h2>Controls</h2>
+        <div class="controls">
+            <button id="connect-btn">Connect</button>
+            <button id="disconnect-btn" disabled>Disconnect</button>
+            <button id="send-btn" disabled>Send Test Message</button>
+            <input type="text" id="test-message" value="TEST" placeholder="Message to send">
+        </div>
+    </div>
+    
+    <div class="card">
+        <h2>Connection Log</h2>
+        <div id="connection-log" class="log"></div>
+    </div>
+    
+    <div class="card">
+        <h2>Message Log</h2>
+        <div id="message-log" class="log"></div>
+    </div>
+
+    <script>
+        // DOM elements
+        const pageUrlEl = document.getElementById('page-url');
+        const wsUrlEl = document.getElementById('ws-url');
+        const statusEl = document.getElementById('connection-status');
+        const connectBtn = document.getElementById('connect-btn');
+        const disconnectBtn = document.getElementById('disconnect-btn');
+        const sendBtn = document.getElementById('send-btn');
+        const testMessageInput = document.getElementById('test-message');
+        const connectionLogEl = document.getElementById('connection-log');
+        const messageLogEl = document.getElementById('message-log');
+        
+        // WebSocket reference
+        let ws = null;
+        
+        // Show page information
+        pageUrlEl.textContent = window.location.href;
+        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const wsUrl = `${protocol}//${window.location.host}/ws`;
+        wsUrlEl.textContent = wsUrl;
+        
+        // Logging functions
+        function logConnection(message) {
+            const entry = document.createElement('div');
+            entry.innerHTML = `<strong>${new Date().toISOString()}</strong>: ${message}`;
+            connectionLogEl.appendChild(entry);
+            connectionLogEl.scrollTop = connectionLogEl.scrollHeight;
+        }
+        
+        function logMessage(message, direction) {
+            const entry = document.createElement('div');
+            entry.innerHTML = `<strong>${new Date().toISOString()} [${direction}]</strong>: ${message}`;
+            messageLogEl.appendChild(entry);
+            messageLogEl.scrollTop = messageLogEl.scrollHeight;
+        }
+        
+        // Button event handlers
+        connectBtn.addEventListener('click', () => {
+            if (ws !== null) {
+                logConnection('Connection already exists, disconnecting first...');
+                ws.close();
+            }
+            
+            try {
+                statusEl.textContent = 'Connecting...';
+                statusEl.className = 'attempting';
+                logConnection(`Attempting to connect to ${wsUrl}`);
+                
+                ws = new WebSocket(wsUrl);
+                
+                ws.onopen = () => {
+                    statusEl.textContent = 'Connected';
+                    statusEl.className = 'connected';
+                    logConnection('Connection established successfully');
+                    connectBtn.disabled = true;
+                    disconnectBtn.disabled = false;
+                    sendBtn.disabled = false;
+                };
+                
+                ws.onclose = (event) => {
+                    statusEl.textContent = 'Disconnected';
+                    statusEl.className = 'disconnected';
+                    logConnection(`Connection closed (Code: ${event.code}, Reason: ${event.reason || 'None'})`);
+                    connectBtn.disabled = false;
+                    disconnectBtn.disabled = true;
+                    sendBtn.disabled = true;
+                    ws = null;
+                };
+                
+                ws.onerror = (error) => {
+                    statusEl.textContent = 'Error';
+                    statusEl.className = 'disconnected';
+                    logConnection(`WebSocket error: ${error}`);
+                };
+                
+                ws.onmessage = (event) => {
+                    logMessage(event.data, 'RECEIVED');
+                };
+            } catch (error) {
+                statusEl.textContent = 'Error';
+                statusEl.className = 'disconnected';
+                logConnection(`Error creating WebSocket: ${error.message}`);
+                ws = null;
+            }
+        });
+        
+        disconnectBtn.addEventListener('click', () => {
+            if (ws) {
+                logConnection('Disconnecting...');
+                ws.close(1000, 'User requested disconnect');
+            }
+        });
+        
+        sendBtn.addEventListener('click', () => {
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                const message = testMessageInput.value || 'TEST';
+                ws.send(message);
+                logMessage(message, 'SENT');
+            } else {
+                logMessage('Failed to send: WebSocket not connected', 'ERROR');
+            }
+        });
+        
+        // Initial log entry
+        logConnection('Diagnostic tool loaded. Click "Connect" to establish WebSocket connection.');
+    </script>
+</body>
+</html> 

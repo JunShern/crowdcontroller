@@ -11,17 +11,76 @@
     <button onclick="sendCommand('C')">Command C</button>
     <h3>Live Aggregation:</h3>
     <pre id="output">Waiting...</pre>
+    <div id="connection-status">Connection status: Connecting...</div>
 
     <script>
-        let ws = new WebSocket("wss://uvicorn-backendmain-production.up.railway.app/ws");
-
-        ws.onmessage = function(event) {
-            document.getElementById("output").innerText = event.data;
-        };
-
-        function sendCommand(cmd) {
-            ws.send(cmd);
+        // Dynamically determine WebSocket URL based on current location
+        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const wsUrl = `${protocol}//${window.location.host}/ws`;
+        
+        document.getElementById('connection-status').textContent = `Attempting to connect to: ${wsUrl}`;
+        
+        let ws = null;
+        let reconnectAttempt = 0;
+        const maxReconnectAttempts = 5;
+        
+        function connectWebSocket() {
+            try {
+                ws = new WebSocket(wsUrl);
+                
+                ws.onopen = function() {
+                    document.getElementById('connection-status').textContent = 'Connection status: Connected';
+                    reconnectAttempt = 0; // Reset reconnect counter on successful connection
+                    console.log('WebSocket connection established');
+                };
+                
+                ws.onmessage = function(event) {
+                    document.getElementById("output").innerText = event.data;
+                    console.log('Received message:', event.data);
+                };
+                
+                ws.onerror = function(error) {
+                    console.error('WebSocket error:', error);
+                    document.getElementById('connection-status').textContent = 'Connection status: Error (see console)';
+                };
+                
+                ws.onclose = function() {
+                    console.log('WebSocket connection closed');
+                    document.getElementById('connection-status').textContent = 'Connection status: Disconnected';
+                    
+                    // Try to reconnect with exponential backoff
+                    if (reconnectAttempt < maxReconnectAttempts) {
+                        reconnectAttempt++;
+                        const timeout = Math.min(1000 * Math.pow(2, reconnectAttempt), 30000);
+                        document.getElementById('connection-status').textContent = 
+                            `Connection status: Reconnecting in ${timeout/1000}s (attempt ${reconnectAttempt}/${maxReconnectAttempts})`;
+                        
+                        setTimeout(connectWebSocket, timeout);
+                    } else {
+                        document.getElementById('connection-status').textContent = 
+                            'Connection status: Failed to connect after multiple attempts';
+                    }
+                };
+            } catch (e) {
+                console.error('Exception during WebSocket creation:', e);
+                document.getElementById('connection-status').textContent = 
+                    `Connection status: Failed to create connection (${e.message})`;
+            }
         }
+        
+        function sendCommand(cmd) {
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(cmd);
+                console.log('Sent command:', cmd);
+            } else {
+                console.warn('Cannot send command: WebSocket not connected');
+                document.getElementById('connection-status').textContent = 
+                    'Connection status: Cannot send command (not connected)';
+            }
+        }
+        
+        // Initial connection
+        connectWebSocket();
     </script>
 </body>
 </html>
