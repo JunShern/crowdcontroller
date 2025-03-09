@@ -2,84 +2,686 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>WebSocket Test</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Crowd Controller</title>
+    <style>
+        :root {
+            --primary: #8250e6;           /* More vibrant purple */
+            --primary-light: #b57bff;     /* Lighter purple */
+            --primary-dark: #5c35a4;      /* Darker purple */
+            --accent: #ff3e3e;            /* Vibrant red */
+            --accent2: #00e1ff;           /* Cyan for cursor pad */
+            --dark: #0a0a23;              /* Darker blue-black background */
+            --light: #f0f0ff;             /* Slightly blue-tinted white */
+            --text: #ffffff;              /* White text */
+            --text-secondary: rgba(255, 255, 255, 0.8);
+            --button-size: 80px;          /* Slightly larger buttons */
+            --button-radius: 12px;        /* Slightly rounder buttons */
+            --neon-glow: 0 0 15px rgba(255, 255, 255, 0.6), 0 0 30px rgba(120, 0, 255, 0.4);
+            --cyan-glow: 0 0 15px rgba(0, 225, 255, 0.6), 0 0 30px rgba(0, 170, 255, 0.4);
+            --red-glow: 0 0 15px rgba(255, 62, 62, 0.6), 0 0 30px rgba(255, 0, 0, 0.4);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            background-color: var(--dark);
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(120, 0, 255, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 90% 80%, rgba(0, 225, 255, 0.15) 0%, transparent 50%);
+            color: var(--text);
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            padding: 10px;
+        }
+
+        .connection-status {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            z-index: 100;
+        }
+
+        #connection-dot {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background-color: red;
+            margin-right: 5px;
+            box-shadow: 0 0 5px red;
+        }
+
+        #connection-dot.connected {
+            background-color: #4caf50;
+            box-shadow: 0 0 5px #4caf50;
+        }
+
+        .controller-container {
+            display: flex;
+            flex: 1;
+            gap: 20px;
+            overflow: hidden;
+            margin-top: 20px;
+        }
+
+        .pad-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+
+        .pad-title {
+            color: var(--text-secondary);
+            font-size: 1rem;
+            margin-bottom: 15px;
+            font-weight: bold;
+            letter-spacing: 1px;
+            text-align: center;
+            text-transform: uppercase;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+        }
+
+        .pad-icon {
+            font-size: 1.3rem;
+            margin-left: 5px;
+            vertical-align: middle;
+        }
+
+        .cursor-icon {
+            display: inline-block;
+            transform: rotate(-45deg);
+            font-size: 1.4rem;
+            margin-left: 5px;
+            vertical-align: middle;
+            filter: drop-shadow(0 0 3px rgba(0, 225, 255, 0.6));
+        }
+
+        .d-pad {
+            position: relative;
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            background: rgba(80, 0, 180, 0.15);
+            box-shadow: inset 0 0 20px rgba(130, 80, 230, 0.3);
+        }
+
+        .cursor-pad {
+            position: relative;
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            background: rgba(0, 180, 180, 0.15);
+            box-shadow: inset 0 0 20px rgba(0, 225, 255, 0.3);
+        }
+
+        .control-button {
+            position: absolute;
+            width: var(--button-size);
+            height: var(--button-size);
+            border-radius: var(--button-radius);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            color: var(--text);
+            touch-action: manipulation;
+            border: none;
+            outline: none;
+            transition: all 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            font-size: 1.4rem;
+            cursor: pointer;
+        }
+
+        .d-pad .control-button {
+            background: linear-gradient(to bottom, var(--primary-light), var(--primary));
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3), var(--neon-glow);
+            border: 2px solid var(--primary-light);
+        }
+
+        .cursor-pad .control-button {
+            background: linear-gradient(to bottom, #40e0ff, #00b3d9);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3), var(--cyan-glow);
+            border: 2px solid #40e0ff;
+        }
+
+        .control-button.active {
+            transform: scale(0.9);
+            filter: brightness(1.5);
+        }
+
+        .d-pad .control-button.active {
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.2), 0 0 25px var(--primary-light);
+        }
+
+        .cursor-pad .control-button.active {
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.2), 0 0 25px #40e0ff;
+        }
+
+        .d-pad .up {
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .d-pad .down {
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .d-pad .left {
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        .d-pad .right {
+            right: 0;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        .cursor-pad .up {
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .cursor-pad .down {
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .cursor-pad .left {
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        .cursor-pad .right {
+            right: 0;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        .click-container {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            padding: 25px 0;
+        }
+
+        .click-button {
+            width: 130px;
+            height: 70px;
+            background: linear-gradient(to bottom, #ff5c5c, var(--accent));
+            border-radius: var(--button-radius);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            color: var(--text);
+            touch-action: manipulation;
+            border: 2px solid #ff5c5c;
+            outline: none;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3), var(--red-glow);
+            transition: all 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            letter-spacing: 1px;
+            font-size: 0.95rem;
+            cursor: pointer;
+        }
+
+        .click-button.active {
+            transform: scale(0.92);
+            filter: brightness(1.5);
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.2), 0 0 25px #ff5c5c;
+        }
+
+        /* Feedback popup */
+        .feedback-container {
+            position: fixed;
+            left: 0;
+            right: 0;
+            top: 40px;
+            display: flex;
+            justify-content: center;
+            pointer-events: none;
+            z-index: 100;
+        }
+
+        .feedback-bubbles {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .feedback-bubble {
+            background: rgba(10, 10, 35, 0.8);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: bold;
+            opacity: 0;
+            transform: translateY(-20px);
+            transition: all 0.2s ease;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 1px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            max-width: 200px;
+            text-align: center;
+        }
+
+        .feedback-bubble.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .feedback-bubble.move-up {
+            color: var(--primary-light);
+            border-color: var(--primary-light);
+            box-shadow: 0 0 15px rgba(130, 80, 230, 0.3);
+        }
+
+        .feedback-bubble.move-down {
+            color: var(--primary-light);
+            border-color: var(--primary-light);
+            box-shadow: 0 0 15px rgba(130, 80, 230, 0.3);
+        }
+
+        .feedback-bubble.move-left {
+            color: var(--primary-light);
+            border-color: var(--primary-light);
+            box-shadow: 0 0 15px rgba(130, 80, 230, 0.3);
+        }
+
+        .feedback-bubble.move-right {
+            color: var(--primary-light);
+            border-color: var(--primary-light);
+            box-shadow: 0 0 15px rgba(130, 80, 230, 0.3);
+        }
+
+        .feedback-bubble.cursor-up {
+            color: #40e0ff;
+            border-color: #40e0ff;
+            box-shadow: 0 0 15px rgba(0, 225, 255, 0.3);
+        }
+
+        .feedback-bubble.cursor-down {
+            color: #40e0ff;
+            border-color: #40e0ff;
+            box-shadow: 0 0 15px rgba(0, 225, 255, 0.3);
+        }
+
+        .feedback-bubble.cursor-left {
+            color: #40e0ff;
+            border-color: #40e0ff;
+            box-shadow: 0 0 15px rgba(0, 225, 255, 0.3);
+        }
+
+        .feedback-bubble.cursor-right {
+            color: #40e0ff;
+            border-color: #40e0ff;
+            box-shadow: 0 0 15px rgba(0, 225, 255, 0.3);
+        }
+
+        .feedback-bubble.left-click {
+            color: #ff5c5c;
+            border-color: #ff5c5c;
+            box-shadow: 0 0 15px rgba(255, 62, 62, 0.3);
+        }
+
+        .feedback-bubble.right-click {
+            color: #ff5c5c;
+            border-color: #ff5c5c;
+            box-shadow: 0 0 15px rgba(255, 62, 62, 0.3);
+        }
+
+        /* Retro scanlines effect */
+        body::after {
+            content: "";
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: repeating-linear-gradient(
+                0deg,
+                rgba(0, 0, 0, 0.1),
+                rgba(0, 0, 0, 0.1) 1px,
+                transparent 1px,
+                transparent 2px
+            );
+            pointer-events: none;
+            z-index: 10;
+            opacity: 0.3;
+        }
+
+        /* Landscape orientation styles */
+        @media screen and (orientation: landscape) {
+            .controller-container {
+                flex-direction: row;
+            }
+        }
+
+        /* Portrait orientation styles */
+        @media screen and (orientation: portrait) {
+            .controller-container {
+                flex-direction: column;
+                margin-bottom: 20px;
+            }
+        }
+
+        /* iPhone X, 11, 12, 13 safe area */
+        @supports (padding: max(0px)) {
+            body {
+                padding-left: max(10px, env(safe-area-inset-left));
+                padding-right: max(10px, env(safe-area-inset-right));
+                padding-bottom: max(10px, env(safe-area-inset-bottom));
+            }
+        }
+    </style>
 </head>
 <body>
-    <h2>Press a Button to Send a Command</h2>
-    <button onclick="sendCommand('A')">Command A</button>
-    <button onclick="sendCommand('B')">Command B</button>
-    <button onclick="sendCommand('C')">Command C</button>
-    <h3>Live Aggregation:</h3>
-    <pre id="output">Waiting...</pre>
-    <div id="connection-status">Connection status: Connecting...</div>
+    <div class="connection-status">
+        <span id="connection-dot"></span>
+        <span id="connection-text">Connecting...</span>
+    </div>
+
+    <div class="controller-container">
+        <!-- Movement controls (left) -->
+        <div class="pad-container">
+            <div class="pad-title">Movement <span class="pad-icon">👣</span></div>
+            <div class="d-pad">
+                <button class="control-button up" data-action="MOVE_UP">W</button>
+                <button class="control-button down" data-action="MOVE_DOWN">S</button>
+                <button class="control-button left" data-action="MOVE_LEFT">A</button>
+                <button class="control-button right" data-action="MOVE_RIGHT">D</button>
+            </div>
+        </div>
+
+        <!-- Cursor controls (right) -->
+        <div class="pad-container">
+            <div class="pad-title">Cursor <span class="cursor-icon">➤</span></div>
+            <div class="cursor-pad">
+                <button class="control-button up" data-action="CURSOR_UP">↑</button>
+                <button class="control-button down" data-action="CURSOR_DOWN">↓</button>
+                <button class="control-button left" data-action="CURSOR_LEFT">←</button>
+                <button class="control-button right" data-action="CURSOR_RIGHT">→</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Click buttons -->
+    <div class="click-container">
+        <button class="click-button" data-action="LEFT_CLICK">LEFT CLICK</button>
+        <button class="click-button" data-action="RIGHT_CLICK">RIGHT CLICK</button>
+    </div>
+
+    <!-- Feedback popup -->
+    <div class="feedback-container">
+        <div class="feedback-bubbles" id="feedback-bubbles"></div>
+    </div>
 
     <script>
-        // Dynamically determine WebSocket URL based on current location
-        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-        const wsUrl = `${protocol}//${window.location.host}/ws`;
+        // DOM Elements
+        const connectionDot = document.getElementById('connection-dot');
+        const connectionText = document.getElementById('connection-text');
+        const controlButtons = document.querySelectorAll('[data-action]');
+        const feedbackBubbles = document.getElementById('feedback-bubbles');
         
-        document.getElementById('connection-status').textContent = `Attempting to connect to: ${wsUrl}`;
-        
+        // WebSocket setup
         let ws = null;
         let reconnectAttempt = 0;
         const maxReconnectAttempts = 5;
+        let lastCommandTime = 0;
         
+        // Command feedback mapping
+        const commandFeedback = {
+            'MOVE_UP': { text: 'Move Up', class: 'move-up' },
+            'MOVE_DOWN': { text: 'Move Down', class: 'move-down' },
+            'MOVE_LEFT': { text: 'Move Left', class: 'move-left' },
+            'MOVE_RIGHT': { text: 'Move Right', class: 'move-right' },
+            'CURSOR_UP': { text: 'Cursor Up', class: 'cursor-up' },
+            'CURSOR_DOWN': { text: 'Cursor Down', class: 'cursor-down' },
+            'CURSOR_LEFT': { text: 'Cursor Left', class: 'cursor-left' },
+            'CURSOR_RIGHT': { text: 'Cursor Right', class: 'cursor-right' },
+            'LEFT_CLICK': { text: 'Left Click', class: 'left-click' },
+            'RIGHT_CLICK': { text: 'Right Click', class: 'right-click' }
+        };
+        
+        // Utility function for vibration feedback (if supported)
+        function vibrateIfSupported(duration = 70) {
+            if (navigator.vibrate) {
+                navigator.vibrate(duration);
+            }
+        }
+        
+        // Connect WebSocket
         function connectWebSocket() {
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsUrl = `${protocol}//${window.location.host}/ws`;
+            
+            connectionText.textContent = 'Connecting...';
+            connectionDot.classList.remove('connected');
+            
             try {
                 ws = new WebSocket(wsUrl);
                 
                 ws.onopen = function() {
-                    document.getElementById('connection-status').textContent = 'Connection status: Connected';
-                    reconnectAttempt = 0; // Reset reconnect counter on successful connection
+                    connectionText.textContent = 'Connected';
+                    connectionDot.classList.add('connected');
+                    reconnectAttempt = 0;
                     console.log('WebSocket connection established');
                 };
                 
                 ws.onmessage = function(event) {
-                    document.getElementById("output").innerText = event.data;
-                    console.log('Received message:', event.data);
+                    try {
+                        // Parse stats data
+                        const data = event.data.replace(/'/g, '"'); // Replace single quotes with double quotes
+                        const stats = JSON.parse(data);
+                        
+                        // Log stats to console
+                        console.log('Command Stats:', stats);
+                    } catch (e) {
+                        console.error('Error parsing stats:', e);
+                        console.log('Raw stats data:', event.data);
+                    }
                 };
                 
                 ws.onerror = function(error) {
                     console.error('WebSocket error:', error);
-                    document.getElementById('connection-status').textContent = 'Connection status: Error (see console)';
+                    connectionText.textContent = 'Connection error';
+                    connectionDot.classList.remove('connected');
                 };
                 
                 ws.onclose = function() {
                     console.log('WebSocket connection closed');
-                    document.getElementById('connection-status').textContent = 'Connection status: Disconnected';
+                    connectionText.textContent = 'Disconnected';
+                    connectionDot.classList.remove('connected');
                     
                     // Try to reconnect with exponential backoff
                     if (reconnectAttempt < maxReconnectAttempts) {
                         reconnectAttempt++;
                         const timeout = Math.min(1000 * Math.pow(2, reconnectAttempt), 30000);
-                        document.getElementById('connection-status').textContent = 
-                            `Connection status: Reconnecting in ${timeout/1000}s (attempt ${reconnectAttempt}/${maxReconnectAttempts})`;
+                        connectionText.textContent = `Reconnecting (${reconnectAttempt}/${maxReconnectAttempts})`;
                         
                         setTimeout(connectWebSocket, timeout);
                     } else {
-                        document.getElementById('connection-status').textContent = 
-                            'Connection status: Failed to connect after multiple attempts';
+                        connectionText.textContent = 'Connection failed';
                     }
                 };
             } catch (e) {
                 console.error('Exception during WebSocket creation:', e);
-                document.getElementById('connection-status').textContent = 
-                    `Connection status: Failed to create connection (${e.message})`;
+                connectionText.textContent = 'Connection failed';
             }
         }
         
-        function sendCommand(cmd) {
+        // Show feedback bubble
+        function showFeedback(command) {
+            if (commandFeedback[command]) {
+                // Create a new bubble for each command
+                const bubble = document.createElement('div');
+                bubble.className = 'feedback-bubble ' + commandFeedback[command].class;
+                bubble.textContent = commandFeedback[command].text;
+                
+                // Add to the container
+                feedbackBubbles.appendChild(bubble);
+                
+                // Show animation with slight delay to allow DOM update
+                requestAnimationFrame(() => {
+                    requestAnimationFrame(() => {
+                        bubble.classList.add('show');
+                    });
+                });
+                
+                // Remove after animation
+                setTimeout(() => {
+                    bubble.classList.remove('show');
+                    setTimeout(() => {
+                        bubble.remove();
+                    }, 200);
+                }, 800);
+                
+                // Clean up old bubbles if there are too many
+                const bubbleElements = feedbackBubbles.querySelectorAll('.feedback-bubble');
+                if (bubbleElements.length > 5) {
+                    bubbleElements[0].remove();
+                }
+            }
+        }
+        
+        // Send command function
+        function sendCommand(command) {
             if (ws && ws.readyState === WebSocket.OPEN) {
-                ws.send(cmd);
-                console.log('Sent command:', cmd);
+                ws.send(command);
+                vibrateIfSupported();
+                showFeedback(command);
+                console.log('Sent command:', command);
             } else {
                 console.warn('Cannot send command: WebSocket not connected');
-                document.getElementById('connection-status').textContent = 
-                    'Connection status: Cannot send command (not connected)';
+                connectionText.textContent = 'Not connected';
+                connectionDot.classList.remove('connected');
             }
         }
         
-        // Initial connection
+        // Helper to add active class for visual feedback
+        function addActiveClass(element) {
+            element.classList.add('active');
+        }
+        
+        // Helper to remove active class
+        function removeActiveClass(element) {
+            element.classList.remove('active');
+        }
+        
+        // Set up button event listeners with proper active state handling
+        controlButtons.forEach(button => {
+            // Touch events for mobile
+            button.addEventListener('touchstart', function(e) {
+                e.preventDefault(); // Prevent default behavior like scrolling
+                addActiveClass(this);
+                const action = this.getAttribute('data-action');
+                sendCommand(action);
+            });
+            
+            button.addEventListener('touchend', function(e) {
+                e.preventDefault();
+                removeActiveClass(this);
+            });
+            
+            button.addEventListener('touchcancel', function(e) {
+                e.preventDefault();
+                removeActiveClass(this);
+            });
+            
+            // Mouse events for desktop
+            button.addEventListener('mousedown', function(e) {
+                addActiveClass(this);
+                const action = this.getAttribute('data-action');
+                sendCommand(action);
+            });
+            
+            button.addEventListener('mouseup', function() {
+                removeActiveClass(this);
+            });
+            
+            button.addEventListener('mouseleave', function() {
+                removeActiveClass(this);
+            });
+        });
+        
+        // Prevent stuck active state when leaving window
+        window.addEventListener('blur', function() {
+            document.querySelectorAll('.active').forEach(removeActiveClass);
+        });
+        
+        // Lock screen in landscape mode if possible
+        if (screen.orientation && screen.orientation.lock) {
+            screen.orientation.lock('landscape').catch(e => {
+                console.warn('Could not lock screen orientation:', e);
+            });
+        }
+        
+        // Prevent pinch-to-zoom
+        document.addEventListener('touchmove', function(e) {
+            if (e.touches.length > 1) {
+                e.preventDefault();
+            }
+        }, { passive: false });
+        
+        // Force screen wake lock if available (keeps screen on while using the controller)
+        if ('wakeLock' in navigator) {
+            let wakeLock = null;
+            
+            const requestWakeLock = async () => {
+                try {
+                    wakeLock = await navigator.wakeLock.request('screen');
+                    console.log('Wake Lock activated');
+                    
+                    wakeLock.addEventListener('release', () => {
+                        console.log('Wake Lock released');
+                    });
+                } catch (err) {
+                    console.error('Wake Lock error:', err);
+                }
+            };
+            
+            // Request wake lock when page becomes visible
+            document.addEventListener('visibilitychange', () => {
+                if (document.visibilityState === 'visible' && !wakeLock) {
+                    requestWakeLock();
+                }
+            });
+            
+            // Initial request
+            if (document.visibilityState === 'visible') {
+                requestWakeLock();
+            }
+        }
+        
+        // Initialize connection
         connectWebSocket();
     </script>
 </body>
