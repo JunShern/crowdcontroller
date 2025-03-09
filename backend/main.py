@@ -46,7 +46,6 @@ async def get_websocket_test():
         return f.read()
 
 connections = set()
-commands_count = defaultdict(int)
 
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
@@ -57,9 +56,8 @@ async def websocket_endpoint(websocket: WebSocket):
     try:
         while True:
             data = await websocket.receive_text()
-            logger.info(f"Received data: {data}")
-            commands_count[data] += 1  # Aggregate commands
-            await broadcast(json.dumps(dict(commands_count)))  # Convert to JSON string
+            logger.info(f"Received command: {data}")
+            await broadcast(json.dumps({"command": data}))
     except WebSocketDisconnect:
         logger.info("WebSocket disconnected")
         connections.remove(websocket)
