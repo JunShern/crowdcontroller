@@ -5,6 +5,7 @@ Backend should already be running:
 On laptop:
 1. conda activate crowd
 2. python controller/crowd_aggregator.py
+3. Show url (localhost) will be displayed after running script
 
 Debugging controller on Mac:
 - python controller/controller.py
