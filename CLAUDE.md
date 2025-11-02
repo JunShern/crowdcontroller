@@ -62,8 +62,8 @@ python crowd_aggregator.py
 
 - **Movement**: MOVE_UP (W), MOVE_DOWN (S), MOVE_LEFT (A), MOVE_RIGHT (D)
 - **Actions**:
-  - ATTACK (press '1' + right-click)
-  - WATER (press '2' + right-click)
+  - ATTACK (press '1' + left-click)
+  - WATER (press '2' + left-click)
   - PROPOSE (press '3' + right-click)
 
 ## Configuration

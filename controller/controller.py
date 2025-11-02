@@ -79,27 +79,27 @@ class Controller:
                 time.sleep(self.key_press_duration)
                 pyautogui.keyUp('d')
 
-            # Handle game actions (number key + right click sequences)
+            # Handle game actions (number key + appropriate click sequences)
             elif action == Action.ATTACK:
                 # Press '1' key
                 pyautogui.keyDown('1')
                 time.sleep(self.key_press_duration)
                 pyautogui.keyUp('1')
                 time.sleep(self.action_delay)
-                # Right click
-                pyautogui.mouseDown(button='right')
+                # Left click
+                pyautogui.mouseDown(button='left')
                 time.sleep(self.key_press_duration)
-                pyautogui.mouseUp(button='right')
+                pyautogui.mouseUp(button='left')
             elif action == Action.WATER:
                 # Press '2' key
                 pyautogui.keyDown('2')
                 time.sleep(self.key_press_duration)
                 pyautogui.keyUp('2')
                 time.sleep(self.action_delay)
-                # Right click
-                pyautogui.mouseDown(button='right')
+                # Left click
+                pyautogui.mouseDown(button='left')
                 time.sleep(self.key_press_duration)
-                pyautogui.mouseUp(button='right')
+                pyautogui.mouseUp(button='left')
             elif action == Action.PROPOSE:
                 # Press '3' key
                 pyautogui.keyDown('3')
