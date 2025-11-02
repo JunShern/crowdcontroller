@@ -10,7 +10,7 @@ class Action(Enum):
     MOVE_RIGHT = "MOVE_RIGHT"
 
     # Game actions
-    ATTACK = "ATTACK"
+    PICKAXE = "PICKAXE"
     WATER = "WATER"
     PROPOSE = "PROPOSE"
     YES = "YES"
@@ -81,7 +81,7 @@ class Controller:
                 pyautogui.keyUp('d')
 
             # Handle game actions (number key + appropriate click sequences)
-            elif action == Action.ATTACK:
+            elif action == Action.PICKAXE:
                 # Press '1' key
                 pyautogui.keyDown('1')
                 time.sleep(self.key_press_duration)
@@ -138,7 +138,7 @@ if __name__ == "__main__":
     time.sleep(0.5)
     controller.execute(Action.MOVE_DOWN)
     time.sleep(0.5)
-    controller.execute(Action.ATTACK)
+    controller.execute(Action.PICKAXE)
     time.sleep(0.5)
     controller.execute(Action.WATER)
     time.sleep(0.5)
