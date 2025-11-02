@@ -19,7 +19,7 @@ Audience (Web UI) → Backend Server → Controller → Game
 
 **2. Web Interface** (`backend/static/index.html`)
 - NES-style game controller UI
-- Sends commands via WebSocket: MOVE_UP/DOWN/LEFT/RIGHT, CURSOR controls, LEFT_CLICK/RIGHT_CLICK
+- Sends commands via WebSocket: MOVE_UP/DOWN/LEFT/RIGHT, ATTACK, WATER, PROPOSE
 - Mobile-friendly with touch support, haptic feedback, and wake lock
 
 **3. Controller** (`controller/crowd_aggregator.py`)
@@ -61,8 +61,10 @@ python crowd_aggregator.py
 ## Supported Commands
 
 - **Movement**: MOVE_UP (W), MOVE_DOWN (S), MOVE_LEFT (A), MOVE_RIGHT (D)
-- **Cursor**: CURSOR_UP/DOWN/LEFT/RIGHT (relative mouse movement, 50px)
-- **Actions**: LEFT_CLICK, RIGHT_CLICK
+- **Actions**:
+  - ATTACK (press '1' + right-click)
+  - WATER (press '2' + right-click)
+  - PROPOSE (press '3' + right-click)
 
 ## Configuration
 

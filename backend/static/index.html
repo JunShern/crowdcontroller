@@ -137,7 +137,7 @@
         }
 
         /* Cross-shaped pads with grid layout */
-        .d-pad, .cursor-pad {
+        .d-pad {
             display: grid;
             grid-template-columns: var(--button-size) var(--button-size) var(--button-size);
             grid-template-rows: var(--button-size) var(--button-size) var(--button-size);
@@ -156,9 +156,10 @@
             align-items: center;
             font-weight: bold;
             touch-action: manipulation;
-            font-size: 0.9rem;
+            font-size: 1.5rem;
             cursor: pointer;
             transition: transform 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            color: #cc9900 !important;
         }
 
         /* Grid positions for D-pad buttons */
@@ -180,42 +181,6 @@
         .d-pad .down {
             grid-column: 2;
             grid-row: 3;
-        }
-
-        /* Grid positions for cursor buttons */
-        .cursor-pad .up {
-            grid-column: 2;
-            grid-row: 1;
-        }
-
-        .cursor-pad .left {
-            grid-column: 1;
-            grid-row: 2;
-        }
-
-        .cursor-pad .right {
-            grid-column: 3;
-            grid-row: 2;
-        }
-
-        .cursor-pad .down {
-            grid-column: 2;
-            grid-row: 3;
-        }
-
-        /* Custom NES cursor icon */
-        .nes-cursor {
-            width: 70%;
-            height: 70%;
-            background-image: url('https://raw.githubusercontent.com/nostalgic-css/NES.css/refs/heads/develop/assets/cursor.png');
-            background-size: contain;
-            background-position: center;
-            background-repeat: no-repeat;
-            image-rendering: pixelated;
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
         }
 
         /* Center icons */
@@ -267,8 +232,8 @@
         }
 
         .click-button {
-            height: 40px;
-            width: 140px;             /* Increased from 120px to 140px to prevent wrapping */
+            height: 50px;
+            width: 160px;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -278,6 +243,14 @@
             font-size: 0.8rem;
             cursor: pointer;
             transition: transform 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        /* Actions container for vertically stacked buttons */
+        .actions-container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            align-items: center;
         }
 
         /* Feedback popup */
@@ -343,37 +316,34 @@
         .feedback-bubble.move-up,
         .feedback-bubble.move-down,
         .feedback-bubble.move-left,
-        .feedback-bubble.move-right {
-            border-color: #f7d51d; /* Yellow for movement */
-            color: black;
-        }
-        
-        .feedback-bubble.cursor-up,
-        .feedback-bubble.cursor-down,
-        .feedback-bubble.cursor-left,
-        .feedback-bubble.cursor-right {
-            border-color: #209cee; /* Blue for cursor */
-        }
-        
-        .feedback-bubble.left-click,
-        .feedback-bubble.right-click {
-            border-color: #e76e55; /* Red for clicks */
+        .feedback-bubble.move-right,
+        .feedback-bubble.action-attack,
+        .feedback-bubble.action-water,
+        .feedback-bubble.action-propose {
+            border: none;
+            background-color: transparent;
+            font-size: 3rem;
+            padding: 0;
         }
 
         /* Auto-sizing for small screens */
         @media screen and (max-height: 480px) {
             :root {
-                --button-size: min(60px, 15vw); /* Increased from 50px to 60px */
-                --center-size: 45px;            /* Increased from 40px to 45px */
+                --button-size: min(60px, 15vw);
+                --center-size: 45px;
             }
-            
+
             .pad-wrapper {
                 gap: 10px;
             }
-            
+
             .click-button {
-                height: 35px;
-                width: 120px;                   /* Increased from 100px to 120px */
+                height: 45px;
+                width: 150px;
+            }
+
+            .actions-container {
+                gap: 15px;
             }
         }
 
@@ -518,35 +488,27 @@
     </div>
 
     <div class="controller-container">
-        <!-- Movement controls (left) with Left Click -->
+        <!-- Movement controls (left) -->
         <div class="pad-wrapper">
-            <button class="click-button nes-btn is-error" data-action="LEFT_CLICK">L-CLICK</button>
             <div class="pad-container">
                 <div class="d-pad">
-                    <button class="control-button up nes-btn is-warning" data-action="MOVE_UP">W</button>
-                    <button class="control-button left nes-btn is-warning" data-action="MOVE_LEFT">A</button>
+                    <button class="control-button up nes-btn is-warning" data-action="MOVE_UP">⬆</button>
+                    <button class="control-button left nes-btn is-warning" data-action="MOVE_LEFT">⬅</button>
                     <div class="center-icon">
                         <i class="nes-ash"></i>
                     </div>
-                    <button class="control-button right nes-btn is-warning" data-action="MOVE_RIGHT">D</button>
-                    <button class="control-button down nes-btn is-warning" data-action="MOVE_DOWN">S</button>
+                    <button class="control-button right nes-btn is-warning" data-action="MOVE_RIGHT">➡</button>
+                    <button class="control-button down nes-btn is-warning" data-action="MOVE_DOWN">⬇</button>
                 </div>
             </div>
         </div>
 
-        <!-- Cursor controls (right) with Right Click -->
+        <!-- Actions (right) -->
         <div class="pad-wrapper">
-            <button class="click-button nes-btn is-error" data-action="RIGHT_CLICK">R-CLICK</button>
-            <div class="pad-container">
-                <div class="cursor-pad">
-                    <button class="control-button up nes-btn is-primary" data-action="CURSOR_UP">↑</button>
-                    <button class="control-button left nes-btn is-primary" data-action="CURSOR_LEFT">←</button>
-                    <div class="center-icon">
-                        <div class="nes-cursor"></div>
-                    </div>
-                    <button class="control-button right nes-btn is-primary" data-action="CURSOR_RIGHT">→</button>
-                    <button class="control-button down nes-btn is-primary" data-action="CURSOR_DOWN">↓</button>
-                </div>
+            <div class="actions-container">
+                <button class="click-button nes-btn is-error" data-action="ATTACK">ATTACK</button>
+                <button class="click-button nes-btn is-primary" data-action="WATER">WATER</button>
+                <button class="click-button nes-btn is-success" data-action="PROPOSE">PROPOSE</button>
             </div>
         </div>
     </div>
@@ -572,16 +534,13 @@
         
         // Command feedback mapping
         const commandFeedback = {
-            'MOVE_UP': { text: 'Move Up', class: 'move-up' },
-            'MOVE_DOWN': { text: 'Move Down', class: 'move-down' },
-            'MOVE_LEFT': { text: 'Move Left', class: 'move-left' },
-            'MOVE_RIGHT': { text: 'Move Right', class: 'move-right' },
-            'CURSOR_UP': { text: 'Cursor Up', class: 'cursor-up' },
-            'CURSOR_DOWN': { text: 'Cursor Down', class: 'cursor-down' },
-            'CURSOR_LEFT': { text: 'Cursor Left', class: 'cursor-left' },
-            'CURSOR_RIGHT': { text: 'Cursor Right', class: 'cursor-right' },
-            'LEFT_CLICK': { text: 'Left Click', class: 'left-click' },
-            'RIGHT_CLICK': { text: 'Right Click', class: 'right-click' }
+            'MOVE_UP': { text: '⬆', class: 'move-up' },
+            'MOVE_DOWN': { text: '⬇', class: 'move-down' },
+            'MOVE_LEFT': { text: '⬅', class: 'move-left' },
+            'MOVE_RIGHT': { text: '➡', class: 'move-right' },
+            'ATTACK': { text: '💥', class: 'action-attack' },
+            'WATER': { text: '💦', class: 'action-water' },
+            'PROPOSE': { text: '💍', class: 'action-propose' }
         };
         
         // Utility function for vibration feedback (if supported)

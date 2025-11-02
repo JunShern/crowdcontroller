@@ -8,37 +8,32 @@ class Action(Enum):
     MOVE_LEFT = "MOVE_LEFT"
     MOVE_DOWN = "MOVE_DOWN"
     MOVE_RIGHT = "MOVE_RIGHT"
-    
-    # Mouse clicks
-    LEFT_CLICK = "LEFT_CLICK"
-    RIGHT_CLICK = "RIGHT_CLICK"
-    
-    # Cursor movement (relative)
-    CURSOR_UP = "CURSOR_UP"
-    CURSOR_DOWN = "CURSOR_DOWN"
-    CURSOR_LEFT = "CURSOR_LEFT"
-    CURSOR_RIGHT = "CURSOR_RIGHT"
+
+    # Game actions
+    ATTACK = "ATTACK"
+    WATER = "WATER"
+    PROPOSE = "PROPOSE"
 
 class Controller:
-    def __init__(self, cursor_step=50, key_press_duration=0.1):
+    def __init__(self, key_press_duration=0.1, action_delay=0.05):
         """
         Initialize the controller.
-        
+
         Args:
-            cursor_step (int): Number of pixels to move cursor for each cursor movement action
             key_press_duration (float): Duration to hold keys and mouse buttons (seconds)
+            action_delay (float): Delay between actions in a sequence (seconds)
         """
         # Safety feature
         pyautogui.FAILSAFE = True
-        
+
         # Set a small delay between pyautogui commands
         pyautogui.PAUSE = 0.05
-        
+
         # Configuration
-        self.cursor_step = cursor_step
         self.key_press_duration = key_press_duration
-        
-        print(f"Controller initialized (cursor_step={cursor_step}, key_press_duration={key_press_duration})")
+        self.action_delay = action_delay
+
+        print(f"Controller initialized (key_press_duration={key_press_duration}, action_delay={action_delay})")
     
     def execute(self, action):
         """
@@ -83,26 +78,38 @@ class Controller:
                 pyautogui.keyDown('d')
                 time.sleep(self.key_press_duration)
                 pyautogui.keyUp('d')
-            
-            # Handle mouse clicks with press duration
-            elif action == Action.LEFT_CLICK:
-                pyautogui.mouseDown(button='left')
+
+            # Handle game actions (number key + right click sequences)
+            elif action == Action.ATTACK:
+                # Press '1' key
+                pyautogui.keyDown('1')
                 time.sleep(self.key_press_duration)
-                pyautogui.mouseUp(button='left')
-            elif action == Action.RIGHT_CLICK:
+                pyautogui.keyUp('1')
+                time.sleep(self.action_delay)
+                # Right click
                 pyautogui.mouseDown(button='right')
                 time.sleep(self.key_press_duration)
                 pyautogui.mouseUp(button='right')
-            
-            # Handle cursor movement
-            elif action == Action.CURSOR_UP:
-                pyautogui.moveRel(0, -self.cursor_step)
-            elif action == Action.CURSOR_DOWN:
-                pyautogui.moveRel(0, self.cursor_step)
-            elif action == Action.CURSOR_LEFT:
-                pyautogui.moveRel(-self.cursor_step, 0)
-            elif action == Action.CURSOR_RIGHT:
-                pyautogui.moveRel(self.cursor_step, 0)
+            elif action == Action.WATER:
+                # Press '2' key
+                pyautogui.keyDown('2')
+                time.sleep(self.key_press_duration)
+                pyautogui.keyUp('2')
+                time.sleep(self.action_delay)
+                # Right click
+                pyautogui.mouseDown(button='right')
+                time.sleep(self.key_press_duration)
+                pyautogui.mouseUp(button='right')
+            elif action == Action.PROPOSE:
+                # Press '3' key
+                pyautogui.keyDown('3')
+                time.sleep(self.key_press_duration)
+                pyautogui.keyUp('3')
+                time.sleep(self.action_delay)
+                # Right click
+                pyautogui.mouseDown(button='right')
+                time.sleep(self.key_press_duration)
+                pyautogui.mouseUp(button='right')
                 
         except pyautogui.FailSafeException:
             print("Failsafe triggered - mouse moved to corner")
@@ -113,22 +120,22 @@ class Controller:
 if __name__ == "__main__":
     print("Testing Controller with some basic commands...")
     controller = Controller()
-    
+
     # Give user time to switch to a window
     print("Starting in 5 seconds... Switch to the desired application window")
     for i in range(5, 0, -1):
         print(f"{i}...")
         time.sleep(1)
-    
+
     # Test some actions
     controller.execute(Action.MOVE_UP)
     time.sleep(0.5)
     controller.execute(Action.MOVE_DOWN)
     time.sleep(0.5)
-    controller.execute(Action.CURSOR_RIGHT)
+    controller.execute(Action.ATTACK)
     time.sleep(0.5)
-    controller.execute(Action.CURSOR_LEFT)
+    controller.execute(Action.WATER)
     time.sleep(0.5)
-    controller.execute(Action.LEFT_CLICK)
-    
+    controller.execute(Action.PROPOSE)
+
     print("Test complete!")
