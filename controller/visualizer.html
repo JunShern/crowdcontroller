@@ -27,7 +27,7 @@
             margin: 10px 0 20px 0;
             color: #fff;
         }
-        #timer-value {
+        #window-value {
             color: #92cc41;
         }
         #commands {
@@ -132,7 +132,7 @@
         <div id="commands" class="nes-container is-dark with-title">
             <p class="title">Votes</p>
             <!-- Command bars will be added here by JavaScript -->
-            <div id="timer">The top-voted command will be executed in <span id="timer-value"></span> seconds...</div>
+            <div id="timer">The top-voted command will be executed every <span id="window-value"></span> second(s).</div>
         </div>
         
         <div id="command-history" class="nes-container is-dark with-title">
@@ -199,9 +199,10 @@
                 return;
             }
             
-            // Update timer - round to whole number
-            const remainingSeconds = Math.round(data.remaining);
-            document.getElementById('timer-value').innerText = remainingSeconds;
+            // Update aggregation window display
+            if (data.aggregation_window !== undefined) {
+                document.getElementById('window-value').innerText = data.aggregation_window;
+            }
             
             // Update command bars
             const commandsDiv = document.getElementById('commands');

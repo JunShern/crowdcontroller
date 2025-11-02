@@ -187,14 +187,16 @@ class CrowdAggregator:
             
             # Display time remaining
             remaining = max(0, AGGREGATION_WINDOW - elapsed)
-            if int(remaining) != int(remaining + 0.1):  # Only print on whole seconds
+
+            # Console printing only on whole seconds (to avoid spam)
+            if int(remaining) != int(remaining + 0.1):
                 remaining_str = f"{remaining:.1f}"
                 print(f"\rTime remaining: {remaining_str} seconds   ", end="")
                 sys.stdout.flush()
-                
-                # Broadcast state every second
-                if self.visualization_clients:
-                    await self.broadcast_state()
+
+            # Broadcast state every loop iteration (10x per second) for smooth visualization
+            if self.visualization_clients:
+                await self.broadcast_state()
             
             # Check if the window has elapsed
             if elapsed >= AGGREGATION_WINDOW:
@@ -257,7 +259,8 @@ class CrowdAggregator:
             'total': sum(self.command_counter.values()),
             'remaining': remaining,
             'last_executed': self.last_executed_command,
-            'command_history': list(self.command_history)
+            'command_history': list(self.command_history),
+            'aggregation_window': AGGREGATION_WINDOW
         }
         
         # Convert to JSON
