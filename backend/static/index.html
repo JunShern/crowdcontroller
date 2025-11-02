@@ -832,6 +832,16 @@
         // Call on initial load and resize
         updateSafeAreaPadding();
         window.addEventListener('resize', updateSafeAreaPadding);
+
+        // Detect iOS devices
+        function isIOS() {
+            return /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+        }
+
+        // Hide fullscreen button on iOS (fullscreen API not supported)
+        if (isIOS()) {
+            fullscreenBtn.style.display = 'none';
+        }
     </script>
 </body>
 </html>
