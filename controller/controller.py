@@ -13,6 +13,7 @@ class Action(Enum):
     ATTACK = "ATTACK"
     WATER = "WATER"
     PROPOSE = "PROPOSE"
+    YES = "YES"
 
 class Controller:
     def __init__(self, key_press_duration=0.1, action_delay=0.05):
@@ -110,7 +111,12 @@ class Controller:
                 pyautogui.mouseDown(button='right')
                 time.sleep(self.key_press_duration)
                 pyautogui.mouseUp(button='right')
-                
+            elif action == Action.YES:
+                # Press 'Y' key
+                pyautogui.keyDown('y')
+                time.sleep(self.key_press_duration)
+                pyautogui.keyUp('y')
+
         except pyautogui.FailSafeException:
             print("Failsafe triggered - mouse moved to corner")
         except Exception as e:
