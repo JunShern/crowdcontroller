@@ -21,6 +21,24 @@
             border-radius: 5px;
             image-rendering: pixelated;
         }
+        #join-banner {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 10px;
+            padding: 15px;
+            border: None;
+        }
+        #join-banner .join-text {
+            font-size: 16px;
+            line-height: 1.8;
+            color: #fff;
+            text-align: center;
+        }
+        #join-banner .join-url {
+            color: #45e3ff;
+            word-break: break-all;
+        }
         #timer {
             font-size: 14px;
             text-align: center;
@@ -129,6 +147,13 @@
 </head>
 <body>
     <div class="container scanlines crt-flicker">
+        <!-- Join Banner -->
+        <div id="join-banner" class="nes-container">
+            <div class="join-text">
+                Join <span class="join-url">tinyurl.com/chloesherngame</span>
+            </div>
+        </div>
+
         <div id="commands" class="nes-container is-dark with-title">
             <p class="title">Votes</p>
             <!-- Command bars will be added here by JavaScript -->
@@ -311,4 +336,4 @@
         };
     </script>
 </body>
-</html> 
+</html>
