@@ -218,5 +218,9 @@ Things to know before you rely on this in front of an audience:
 
 ---
 
+## License
+
+MIT — see [LICENSE](LICENSE). Do what you like with it; no warranty.
+
 Built with FastAPI, WebSockets, PyAutoGUI, and
 [NES.css](https://nostalgic-css.github.io/NES.css/).
