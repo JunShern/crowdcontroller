@@ -4,9 +4,9 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
 import uvicorn
-from collections import defaultdict
 import logging
 import json
+import os
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -81,4 +81,6 @@ async def broadcast(message: str):
         connections.discard(ws)
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8080)
+    # Port 8000 by default so a locally-run backend does not collide with the
+    # controller's visualizer on 8080. Hosts like Railway set $PORT themselves.
+    uvicorn.run(app, host="0.0.0.0", port=int(os.environ.get("PORT", 8000)))

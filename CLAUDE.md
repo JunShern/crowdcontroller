@@ -45,17 +45,16 @@ Audience (Web UI) → Backend Server → Controller → Game
 ## Setup
 
 ```bash
-# Start backend server (cloud/Railway)
-cd backend
-python main.py
+# Start backend server (cloud/Railway, or locally on port 8000)
+python backend/main.py
 
 # Start controller (local machine with game running)
-cd controller
-python crowd_aggregator.py
+export CROWD_BACKEND_URL="wss://your-backend.up.railway.app/ws"
+python controller/crowd_aggregator.py
 # Visit http://localhost:8080 for visualization
 
 # Share backend URL with audience
-# e.g., https://your-backend.railway.app
+# e.g., https://your-backend.up.railway.app
 ```
 
 ## Supported Commands
@@ -69,10 +68,14 @@ python crowd_aggregator.py
 
 ## Configuration
 
+Environment variables:
+- `CROWD_BACKEND_URL` - Backend WebSocket URL (default `ws://localhost:8000/ws`)
+- `JOIN_URL` - Link shown on the visualizer banner; banner hidden if unset
+- `VISUALIZER_PORT` - Visualization server port (default 8080)
+- `PORT` - Backend listen port when run directly (default 8000)
+
 `controller/crowd_aggregator.py`:
-- `AGGREGATION_WINDOW = 1.0` - Voting window duration (seconds)
-- `WEB_PORT = 8080` - Visualization server port
-- `WEBSOCKET_URI` - Backend WebSocket URL
+- `AGGREGATION_WINDOW = 1` - Voting window duration (seconds)
 
 ---
 

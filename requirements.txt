@@ -1,4 +1,4 @@
+# Backend server dependencies
 fastapi
 uvicorn
-websockets 
-aiohttp 
+websockets  # WebSocket protocol implementation used by uvicorn
