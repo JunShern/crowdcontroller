@@ -13,6 +13,16 @@ second character across the map to find them. The code is not tied to that,
 though — everything the crowd does is just a keypress, so it works with any game
 that takes keyboard and mouse input.
 
+> **A note on this documentation.** It was written by
+> [Claude](https://claude.ai), an AI assistant, based on a read-through of the
+> code in this repo.
+>
+> If you'd like to run this and get stuck, the setup assumes a fair amount of
+> technical background (see the next section). Two good ways to get unstuck:
+> ask a friend who does software development, or paste the errors you're
+> hitting into an AI assistant such as [Claude](https://claude.ai) or ChatGPT
+> and work through it with them.
+
 ---
 
 ## Please read this first
