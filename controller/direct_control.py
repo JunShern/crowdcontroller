@@ -3,6 +3,7 @@ import asyncio
 import json
 import websockets
 import logging
+import os
 import signal
 import sys
 
@@ -16,8 +17,8 @@ logging.basicConfig(
 )
 logger = logging.getLogger('DirectControl')
 
-# WebSocket URI for Railway
-WEBSOCKET_URI = "wss://uvicorn-backendmain-production.up.railway.app/ws"
+# WebSocket address of your deployed backend, e.g. wss://your-app.up.railway.app/ws
+WEBSOCKET_URI = os.environ.get("CROWD_BACKEND_URL", "ws://localhost:8000/ws")
 
 class DirectControl:
     def __init__(self):

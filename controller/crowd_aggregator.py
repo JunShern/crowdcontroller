@@ -23,9 +23,14 @@ logging.basicConfig(
 logger = logging.getLogger('CrowdAggregator')
 
 # Configuration
-WEBSOCKET_URI = "wss://uvicorn-backendmain-production.up.railway.app/ws"
+# CROWD_BACKEND_URL is the WebSocket address of your deployed backend, e.g.
+# wss://your-app.up.railway.app/ws . Defaults to a backend running locally.
+WEBSOCKET_URI = os.environ.get("CROWD_BACKEND_URL", "ws://localhost:8000/ws")
+# JOIN_URL is shown on the visualizer so the audience knows where to go, e.g.
+# a short link pointing at your backend. Hidden if unset.
+JOIN_URL = os.environ.get("JOIN_URL", "")
 AGGREGATION_WINDOW = 1  # seconds
-WEB_PORT = 8080  # Port for visualization web server
+WEB_PORT = int(os.environ.get("VISUALIZER_PORT", 8080))  # Visualization web server
 
 # Path to the HTML template file (relative to this script)
 HTML_TEMPLATE_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'visualizer.html')
@@ -314,6 +319,14 @@ class CrowdAggregator:
         try:
             with open(HTML_TEMPLATE_PATH, 'r') as f:
                 html_content = f.read()
+            if JOIN_URL:
+                html_content = html_content.replace('{{JOIN_URL}}', JOIN_URL)
+            else:
+                # No join URL configured - hide the banner rather than showing a placeholder
+                html_content = html_content.replace(
+                    '<div id="join-banner" class="nes-container">',
+                    '<div id="join-banner" class="nes-container" style="display: none;">'
+                )
             return web.Response(text=html_content, content_type='text/html')
         except Exception as e:
             logger.error(f"Error reading HTML template: {str(e)}")
